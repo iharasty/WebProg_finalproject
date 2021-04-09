@@ -18,6 +18,11 @@
     justify-content: center
 }
 
+img{
+    object-fit: contain;
+    display: block;
+}
+
 /*
     TODO: make all this CSS so that it's actually responsive
     & does the right thing.
@@ -28,7 +33,6 @@
     width: 12%;
     height: 12%;
     border: 1px solid;
-    max-height: 12%;
 }
 
 .board-wrapper:after {
@@ -46,8 +50,8 @@
 }
 
 .piece{
-    width: 100%;
-    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .active{
