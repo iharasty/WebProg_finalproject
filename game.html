@@ -1,0 +1,521 @@
+<html>
+
+    <head>
+    <title>Beta Chess Game</title>
+    <link rel='stylesheet' href='./game.css' />
+    </head>
+    <body>
+        
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        
+        <script type="text/javascript">
+            let letters=["A","B","C","D","E","F","G","H"]
+            let images = {
+                "black": {
+                    "bishop":   "./static/black_bishop.png",
+                    "king":     "./static/black_king.png",
+                    "knight":   "./static/black_knight.png",
+                    "pawn":     "./static/black_pawn.png",
+                    "rook":     "./static/black_rook.png",
+                    "queen":    "./static/black_queen.png",
+                },
+                "white": {
+                    "bishop":   "./static/white_bishop.png",
+                    "king":     "./static/white_king.png",
+                    "knight":   "./static/white_knight.png",
+                    "pawn":     "./static/white_pawn.png",
+                    "rook":     "./static/white_rook.png",
+                    "queen":    "./static/white_queen.png",
+                }
+            }
+            
+            let colorSide = {
+                'white':'top',
+                'black':'bottom'
+            }
+
+            class Piece {
+                constructor(color, type){
+                    this.type = type;
+                    this.color = color;
+                }
+                getImgSrc(){
+                    return images[this.color][this.type]
+                }
+                
+                pieceCanMove(board,position){
+                    let enemeyPieces = []
+                    let kingCords = []
+                    let tiles = $('.board-tile');
+                    for(let i = 0; i < tiles.length ;i++ ){
+                        let [x,y] = boardToIndicies(tiles[i].id);
+                        if(board[x][y] && board[x][y].color !== this.color && board[x][y].type != 'pawn'){
+                            let badGuy = [board[x][y] , [x,y]]
+                            enemeyPieces.push(badGuy)     
+                        }
+                        if(board[x][y] && board[x][y].type == 'king' && board[x][y].color == this.color ){
+                            kingCords = [x,y]
+                        }
+                    }
+                    console.log(enemeyPieces)
+                    console.log(kingCords)
+                }
+                
+                getViableMoves(board, position){
+                    
+                    let possTiles = []
+                    let [x,y] = position
+                    //TODO: IMPLEMENT 'move allowing check' CHECKING
+                    this.pieceCanMove(board,position)
+                    
+                    if(this.type === 'pawn'){
+                        
+                        let direction = (colorSide[this.color] === "top"? "down" :"up")
+                        let increment = (direction === "down" ? -1 : 1)
+                        let pawnMove2 = (direction === "down" ? "G" : "B")
+                        
+                        if(!board[x][y+increment]){
+                            possTiles.push(indiciesToBoard(x,y+increment));
+                            
+                            if(!board[x][y+(increment * 2)] && indiciesToBoard(x,y).charAt(0) === pawnMove2){
+                                possTiles.push(indiciesToBoard(x,y+(increment * 2)));
+                            }
+                        }
+                        
+                        //left attack diaganol
+                        if(x > 0 && board[x-1][y+increment] && board[x-1][y+increment].color !== this.color )
+                            possTiles.push(indiciesToBoard(x-1,y+increment));
+                        
+                                                
+                        //right attack diaganol
+                        if(x < 7 && board[x+1][y+increment] && board[x+1][y+increment].color !== this.color )
+                            possTiles.push(indiciesToBoard(x+1,y+increment));
+                        
+                    }
+                    
+                    if(this.type === 'rook'){
+  
+                        //Right Way
+                        for(let i = x + 1; i < board.length; i++){
+                            console.log(indiciesToBoard(i,y))
+                            if(board[i][y]){
+                               if(board[i][y].color === this.color){
+                                   break;
+                                }else{
+                                    possTiles.push(indiciesToBoard(i,y));
+                                    break;
+                                }    
+                            }
+                            possTiles.push(indiciesToBoard(i,y));
+                        }
+                        
+                        //Left way                        
+                        for(let i = x - 1; i >= 0; i--){
+                            
+                            console.log(indiciesToBoard(i,y))
+                            if(board[i][y]){
+                               if(board[i][y].color === this.color){
+                                   break;
+                                }else{
+                                    possTiles.push(indiciesToBoard(i,y));
+                                    break;
+                                }    
+                            }
+                            possTiles.push(indiciesToBoard(i,y));
+                        }
+                        
+                        //Up
+                        for(let j = y + 1; j < board.length; j++){
+                            
+                            console.log(indiciesToBoard(x,j))
+                            if(board[x][j]){
+                               if(board[x][j].color === this.color){
+                                   break;
+                                }else{
+                                    possTiles.push(indiciesToBoard(x,j));
+                                    break;
+                                }    
+                            }
+                            possTiles.push(indiciesToBoard(x,j));
+                        }
+                        
+                        //down
+                        for(let j = y - 1; j >= 0; j--){
+                            console.log(indiciesToBoard(x,j))
+                            if(board[x][j]){
+                               if(board[x][j].color === this.color){
+                                   break;
+                                }else{
+                                    possTiles.push(indiciesToBoard(x,j));
+                                    break;
+                                }    
+                            }
+                            possTiles.push(indiciesToBoard(x,j));
+                        }
+                    }
+                    
+                    if(this.type === 'knight'){
+                        
+                        let moves = [[x+2, y+1],[x-2, y+1],[x+2, y-1],[x-2, y-1],[x+1, y+2],[x-1, y+2],[x+1, y-2],[x-1, y-2]];
+                        for(let i = 0; i < 8; i++){
+                            let[potX,potY] = moves[i];
+                            if(potX >= 0 && potX < 8 && potY >= 0 && potY < 8){
+                                if(!board[potX][potY] || board[potX][potY].color !== this.color)
+                                    possTiles.push(indiciesToBoard(potX,potY));
+                            }
+                        }
+                    }
+                    
+                    if(this.type === 'bishop'){
+                        let [potX, potY] = position;
+                        
+                        //Top Right Diagonal
+                        potX++;
+                        potY++;
+                        while(potX >= 0 && potX < 8 && potY >= 0 && potY < 8){
+                            if(board[potX][potY]){
+                                if(board[potX][potY].color !== this.color){
+                                    possTiles.push(indiciesToBoard(potX,potY));
+                                    break;
+                                }else{
+                                    break
+                                }
+                            }
+                            possTiles.push(indiciesToBoard(potX,potY));                        
+                            potX++;
+                            potY++;
+                        }
+                                                
+                        [potX, potY] = position;
+                        
+                        //Top Left Diagonal
+                        potX--;
+                        potY++;
+                        while(potX >= 0 && potX < 8 && potY >= 0 && potY < 8){
+                            if(board[potX][potY]){
+                                if(board[potX][potY].color !== this.color){
+                                    possTiles.push(indiciesToBoard(potX,potY));
+                                    break;
+                                }else{
+                                    break
+                                }
+                            }
+                            possTiles.push(indiciesToBoard(potX,potY));                         
+                            potX--;
+                            potY++;
+                        }
+                        
+                        [potX, potY] = position;
+                        
+                        //Down Left Diagonal
+                        potX--;
+                        potY--;
+                        while(potX >= 0 && potX < 8 && potY >= 0 && potY < 8){
+                            if(board[potX][potY]){
+                                if(board[potX][potY].color !== this.color){
+                                    possTiles.push(indiciesToBoard(potX,potY));
+                                    break;
+                                }else{
+                                    break
+                                }
+                            }
+                            possTiles.push(indiciesToBoard(potX,potY));                         
+                            potX--;
+                            potY--;
+                        }
+                        
+                        [potX, potY] = position;
+                        
+                        //Down Right Diagonal
+                        potX++;
+                        potY--;
+                        while(potX >= 0 && potX < 8 && potY >= 0 && potY < 8){
+                            if(board[potX][potY]){
+                                if(board[potX][potY].color !== this.color){
+                                    possTiles.push(indiciesToBoard(potX,potY));
+                                    break;
+                                }else{
+                                    break
+                                }
+                            }
+                            possTiles.push(indiciesToBoard(potX,potY));                         
+                            potX++;
+                            potY--;
+                        }
+                        
+                    }
+                    
+                    if(this.type === 'queen'){
+                        
+                        let [potX, potY] = position;
+                        
+                        //Top Right Diagonal
+                        potX++;
+                        potY++;
+                        while(potX >= 0 && potX < 8 && potY >= 0 && potY < 8){
+                            if(board[potX][potY]){
+                                if(board[potX][potY].color !== this.color){
+                                    possTiles.push(indiciesToBoard(potX,potY));
+                                    break;
+                                }else{
+                                    break
+                                }
+                            }
+                            possTiles.push(indiciesToBoard(potX,potY));                        
+                            potX++;
+                            potY++;
+                        }
+                                                
+                        [potX, potY] = position;
+                        
+                        //Top Left Diagonal
+                        potX--;
+                        potY++;
+                        while(potX >= 0 && potX < 8 && potY >= 0 && potY < 8){
+                            if(board[potX][potY]){
+                                if(board[potX][potY].color !== this.color){
+                                    possTiles.push(indiciesToBoard(potX,potY));
+                                    break;
+                                }else{
+                                    break
+                                }
+                            }
+                            possTiles.push(indiciesToBoard(potX,potY));                         
+                            potX--;
+                            potY++;
+                        }
+                        
+                        [potX, potY] = position;
+                        
+                        //Down Left Diagonal
+                        potX--;
+                        potY--;
+                        while(potX >= 0 && potX < 8 && potY >= 0 && potY < 8){
+                            if(board[potX][potY]){
+                                if(board[potX][potY].color !== this.color){
+                                    possTiles.push(indiciesToBoard(potX,potY));
+                                    break;
+                                }else{
+                                    break
+                                }
+                            }
+                            possTiles.push(indiciesToBoard(potX,potY));                         
+                            potX--;
+                            potY--;
+                        }
+                        
+                        [potX, potY] = position;
+                        
+                        //Down Right Diagonal
+                        potX++;
+                        potY--;
+                        while(potX >= 0 && potX < 8 && potY >= 0 && potY < 8){
+                            if(board[potX][potY]){
+                                if(board[potX][potY].color !== this.color){
+                                    possTiles.push(indiciesToBoard(potX,potY));
+                                    break;
+                                }else{
+                                    break
+                                }
+                            }
+                            possTiles.push(indiciesToBoard(potX,potY));                         
+                            potX++;
+                            potY--;
+                        }
+                        
+                                                //Right Way
+                        for(let i = x + 1; i < board.length; i++){
+                            console.log(indiciesToBoard(i,y))
+                            if(board[i][y]){
+                               if(board[i][y].color === this.color){
+                                   break;
+                                }else{
+                                    possTiles.push(indiciesToBoard(i,y));
+                                    break;
+                                }    
+                            }
+                            possTiles.push(indiciesToBoard(i,y));
+                        }
+                        
+                        //Left way                        
+                        for(let i = x - 1; i >= 0; i--){
+                            
+                            console.log(indiciesToBoard(i,y))
+                            if(board[i][y]){
+                               if(board[i][y].color === this.color){
+                                   break;
+                                }else{
+                                    possTiles.push(indiciesToBoard(i,y));
+                                    break;
+                                }    
+                            }
+                            possTiles.push(indiciesToBoard(i,y));
+                        }
+                        
+                        //Up
+                        for(let j = y + 1; j < board.length; j++){
+                            
+                            console.log(indiciesToBoard(x,j))
+                            if(board[x][j]){
+                               if(board[x][j].color === this.color){
+                                   break;
+                                }else{
+                                    possTiles.push(indiciesToBoard(x,j));
+                                    break;
+                                }    
+                            }
+                            possTiles.push(indiciesToBoard(x,j));
+                        }
+                        
+                        //down
+                        for(let j = y - 1; j >= 0; j--){
+                            console.log(indiciesToBoard(x,j))
+                            if(board[x][j]){
+                               if(board[x][j].color === this.color){
+                                   break;
+                                }else{
+                                    possTiles.push(indiciesToBoard(x,j));
+                                    break;
+                                }    
+                            }
+                            possTiles.push(indiciesToBoard(x,j));
+                        }
+                        
+                        
+                    }
+                    
+                    if(this.type === 'king'){
+                        //TODO: IMPLEMENT 'move into check' CHECKING
+                        let moves = [[x+1,y],[x+1,y+1],[x,y+1],[x-1,y+1],[x-1,y],[x-1,y-1],[x,y-1],[x+1,y-1]];
+                        for(let i = 0; i < 8; i++){
+                            let[potX,potY] = moves[i];
+                            if(potX >= 0 && potX < 8 && potY >= 0 && potY < 8){
+                                if(!board[potX][potY] || board[potX][potY].color !== this.color)
+                                    possTiles.push(indiciesToBoard(potX,potY));
+                            }
+                        }
+                    }
+                    
+                    return possTiles;
+                }
+            }
+            
+            
+            let board = [
+                [new Piece("black","rook"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","rook")],
+                [new Piece("black","knight"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","knight")],
+                [new Piece("black","bishop"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","bishop")],
+                [new Piece("black","king"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","king")],
+                [new Piece("black","queen"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","queen")],
+                [new Piece("black","bishop"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","bishop")],
+                [new Piece("black","knight"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","knight")],
+                [new Piece("black","rook"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","rook")],
+            ]
+            
+            let turn = "white";
+      
+            
+            function paintBoard(){
+                //The indicies in this function are really ugly because I designed it
+                //for a wrong board set up (I did [y,x] cords...)
+                $('.board-tile').remove()
+                for(let y = 7; y >= 0; y--){
+                    for(let x = 0; x < 8; x++){
+                        
+                        let tile = document.createElement("div");
+                        tile.setAttribute("class","board-tile");
+                        tile.id = indiciesToBoard(x,y)
+                        
+                        //If there's a piece there, put its corelating image
+                        if(board[x][y]){
+                            let img = document.createElement("img");
+                            img.setAttribute("src",board[x][y].getImgSrc());
+                            img.setAttribute("class","piece");
+                                                    
+                            if(turn == "white" && board[x][y].color === 'white'){
+                                tile.setAttribute('onclick','selectTile(this)')
+                            }else{
+                                tile.setAttribute('onclick','selectTile(this)')
+                            }
+                            
+                            tile.append(img);  
+                        }
+                        
+                        //math for making the colors change as they should
+                        let offSet = (x % 2 == 0 ? 0 : 1)
+                        if( ( (y + offSet) % 2) === 0)
+                            tile.classList.add("black-tile");
+                        else
+                            tile.classList.add("white-tile");
+                        
+                        $(".board-wrapper").append(tile);
+                    }
+                }
+            }
+            
+            function indiciesToBoard(i, j){
+                return letters[j] + (i + 1);
+            }
+            
+            function boardToIndicies(tileId){
+                num = Number(tileId.charAt(1)) - 1
+                letter = letters.findIndex( (item) => item === tileId.charAt(0))
+                return [num, letter]
+            }
+            
+            function changeTurn(){
+                if(turn === "white"){
+                    turn = "black";
+                }else{
+                    turn = "white"
+                }
+            }
+            
+            let targetPieceCords;
+            
+            function selectTile(selectedTile){
+                
+                $('.board-tile').removeClass('active');
+                $('.board-tile').removeAttr('onclick');
+                $(".board-tile").attr("onclick","selectTile(this)")
+                
+                targetPieceCords = null;
+                let cords = boardToIndicies(selectedTile.id);
+                let targetPiece = board[cords[0]][cords[1]];
+
+                //TURN ENFORCEMENT
+                if(targetPiece && targetPiece.color === turn){
+                    targetPieceCords = cords;
+                    let selectedTiles = targetPiece.getViableMoves(board, cords);
+                    for(let i = 0; i < selectedTiles.length; i++){
+                        $('#' + selectedTiles[i]).addClass('active');
+                        $('#' + selectedTiles[i]).removeAttr('onclick')
+                        $('#' + selectedTiles[i]).attr('onclick','moveHere(this)')
+                    }
+                }
+            }
+            
+            function moveHere(targetTile){
+                let targetPiece = board[targetPieceCords[0]][targetPieceCords[1]];
+                let targetCords = boardToIndicies(targetTile.id)
+                console.log(targetCords)
+                board[targetCords[0]][targetCords[1]] = targetPiece;
+                board[targetPieceCords[0]][targetPieceCords[1]] = null;
+                changeTurn();
+                console.log(turn)
+                paintBoard()
+                
+            }
+            
+            paintBoard();
+            
+        </script>
+        <div class="page-wrapper">
+            <div class="board-wrapper">
+            </div>
+            <button onclick="paintBoard();">here</button>
+        </div> 
+        
+    </body>
+
+</html>

@@ -1,0 +1,55 @@
+.page-wrapper{
+    width: 100%;
+    height: 100%;
+    align-content: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.board-wrapper{
+    position: relative;
+    background: cyan;
+    max-width: 50%;
+    margin: 25%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center
+}
+
+/*
+    TODO: make all this CSS so that it's actually responsive
+    & does the right thing.
+*/
+
+.board-tile{
+    background: red;
+    width: 12%;
+    height: 12%;
+    border: 1px solid;
+    max-height: 12%;
+}
+
+.board-wrapper:after {
+  content: "";
+  display: block;
+  padding-bottom:75%;
+}
+
+.black-tile{
+    background: #592b15;
+}
+
+.white-tile{
+    background: #f0a581;
+}
+
+.piece{
+    width: 100%;
+    height: 100%;
+}
+
+.active{
+    background: green;
+}
