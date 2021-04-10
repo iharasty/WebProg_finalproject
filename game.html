@@ -46,9 +46,9 @@
                 pieceCanMove(board,position,possibleMoves){
                     let enemeyPieces = [] //list pairs of the enemy peice its reference[0] & current position[1]
                     let kingPos = null;
-                    let tiles = $('.board.board-tile');
-                    for(let i = 0; i < tiles.length ;i++ ){
-                        let [x,y] = board.boardToIndicies(tiles[i].id);
+                    let tiles = $('.board-tile');
+                    for(let i = 0; i < tiles.length; i++ ){
+                        let [x,y] = boardToIndicies(tiles[i].id);
                         if(board.board[x][y] && board.board[x][y].color !== this.color){
                             let badGuy = [board.board[x][y] , [x,y]]
                             enemeyPieces.push(badGuy)     
@@ -57,6 +57,7 @@
                             kingPos = indiciesToBoard(x,y);
                         }
                     }
+                    
                     
                     let checkedPossibleMoves = [];
                     let [currX, currY] = position;
@@ -69,11 +70,10 @@
                         nextboard.board[possX][possY] = board.board[currX][currY].clone();
                         let valid = true;
                         
+                        
                         for(let j = 0; j < enemeyPieces.length && valid; j++){
-                            
-                            //WONT WORK DUE TO NEED TO FIX PASSING IN board.board OBJECTS OR board.board LISTS
-                            //if the new potential board.board state allows the king to be attacked, remove it from the set.
-                            if(enemeyPieces[i][0].getViableMoves(newboard,enemeyPieces[1]).includes(kingPos)){
+
+                            if(enemeyPieces[j][0].getViableMoves(nextboard,enemeyPieces[j][1],false).includes(kingPos)){
                                 valid = false;
                             }
                         }
@@ -82,10 +82,11 @@
                         }
                     }
                     
+                    console.log(this.color,this.type,possibleMoves,checkedPossibleMoves);
                     return checkedPossibleMoves;
                 }
                 
-                getViableMoves(board, position){
+                getViableMoves(board, position, check){
                     
                     let possTiles = []
                     let [x,y] = position
@@ -120,7 +121,6 @@
   
                         //Right Way
                         for(let i = x + 1; i < board.board.length; i++){
-                            console.log(indiciesToBoard(i,y))
                             if(board.board[i][y]){
                                if(board.board[i][y].color === this.color){
                                    break;
@@ -135,7 +135,6 @@
                         //Left way                        
                         for(let i = x - 1; i >= 0; i--){
                             
-                            console.log(indiciesToBoard(i,y))
                             if(board.board[i][y]){
                                if(board.board[i][y].color === this.color){
                                    break;
@@ -150,7 +149,6 @@
                         //Up
                         for(let j = y + 1; j < board.board.length; j++){
                             
-                            console.log(indiciesToBoard(x,j))
                             if(board.board[x][j]){
                                if(board.board[x][j].color === this.color){
                                    break;
@@ -164,7 +162,6 @@
                         
                         //down
                         for(let j = y - 1; j >= 0; j--){
-                            console.log(indiciesToBoard(x,j))
                             if(board.board[x][j]){
                                if(board.board[x][j].color === this.color){
                                    break;
@@ -348,7 +345,6 @@
                         
                                                 //Right Way
                         for(let i = x + 1; i < board.board.length; i++){
-                            console.log(indiciesToBoard(i,y))
                             if(board.board[i][y]){
                                if(board.board[i][y].color === this.color){
                                    break;
@@ -363,7 +359,6 @@
                         //Left way                        
                         for(let i = x - 1; i >= 0; i--){
                             
-                            console.log(indiciesToBoard(i,y))
                             if(board.board[i][y]){
                                if(board.board[i][y].color === this.color){
                                    break;
@@ -378,7 +373,6 @@
                         //Up
                         for(let j = y + 1; j < board.board.length; j++){
                             
-                            console.log(indiciesToBoard(x,j))
                             if(board.board[x][j]){
                                if(board.board[x][j].color === this.color){
                                    break;
@@ -392,7 +386,6 @@
                         
                         //down
                         for(let j = y - 1; j >= 0; j--){
-                            console.log(indiciesToBoard(x,j))
                             if(board.board[x][j]){
                                if(board.board[x][j].color === this.color){
                                    break;
@@ -419,7 +412,11 @@
                         }
                     }
                     
-                    return this.pieceCanMove(board.board,position,possTiles);
+                    if(check)
+                        return this.pieceCanMove(board,position,possTiles);
+                    else
+                        return possTiles;
+                    
                 }
                 
                 clone(){
@@ -444,9 +441,12 @@
                 clone(){
                     let newBoard = [];
                     for(let i = 0; i < 8; i++){
-                        newboard.board[i] = [];
+                        newBoard[i] = [];
                         for(let j = 0; j < 8; j++){
-                            newboard.board[i][j] = this.board.board[i][j].clone()
+                            if(this.board[i][j])
+                                newBoard[i][j] = this.board[i][j].clone()
+                            else
+                                newBoard[i][j] = null;
                         }
                     }
                     let newBoardObject = new Board();
@@ -520,9 +520,9 @@
             
             function selectTile(selectedTile){
                 
-                $('.board.board-tile').removeClass('active');
-                $('.board.board-tile').removeAttr('onclick');
-                $(".board.board-tile").attr("onclick","selectTile(this)")
+                $('.board-tile').removeClass('active');
+                $('.board-tile').removeAttr('onclick');
+                $(".board-tile").attr("onclick","selectTile(this)")
                 
                 targetPieceCords = null;
                 let cords = boardToIndicies(selectedTile.id);
@@ -531,7 +531,7 @@
                 //TURN ENFORCEMENT
                 if(targetPiece && targetPiece.color === turn){
                     targetPieceCords = cords;
-                    let selectedTiles = targetPiece.getViableMoves(board.board, cords);
+                    let selectedTiles = targetPiece.getViableMoves(board, cords, true);
                     for(let i = 0; i < selectedTiles.length; i++){
                         $('#' + selectedTiles[i]).addClass('active');
                         $('#' + selectedTiles[i]).removeAttr('onclick')
@@ -542,12 +542,10 @@
             
             function moveHere(targetTile){
                 let targetPiece = board.board[targetPieceCords[0]][targetPieceCords[1]];
-                let targetCords = board.boardToIndicies(targetTile.id)
-                console.log(targetCords)
+                let targetCords = boardToIndicies(targetTile.id)
                 board.board[targetCords[0]][targetCords[1]] = targetPiece;
                 board.board[targetPieceCords[0]][targetPieceCords[1]] = null;
                 changeTurn();
-                console.log(turn)
                 paintBoard()
                 
             }
