@@ -38,6 +38,7 @@
                 constructor(color, type){
                     this.type = type;
                     this.color = color;
+                    this.hasMoved = false;
                 }
                 getImgSrc(){
                     return images[this.color][this.type]
@@ -58,7 +59,8 @@
                         }
                     }
                     
-                    
+                    console.log("enemy pieces: ", enemeyPieces)
+                    console.log("my king: ", kingPos)
                     let checkedPossibleMoves = [];
                     let [currX, currY] = position;
                     
@@ -69,16 +71,34 @@
                         let [possX, possY] = boardToIndicies(possTile);
                         nextboard.board[possX][possY] = board.board[currX][currY].clone();
                         let valid = true;
-                        
-                        
-                        for(let j = 0; j < enemeyPieces.length && valid; j++){
 
-                            if(enemeyPieces[j][0].getViableMoves(nextboard,enemeyPieces[j][1],false).includes(kingPos)){
-                                valid = false;
+                                                    
+                        if(this.type !== "king"){
+                            for(let j = 0; j < enemeyPieces.length && valid; j++){
+
+                                    /*If the currently checked board position allows for my king to be attacked, then dont add
+                                    * it to the list of "checked moves", UNLESS we also can take the piece that is currently
+                                    * attacking my king
+                                    */
+                                    if(enemeyPieces[j][0].getViableMoves(nextboard,enemeyPieces[j][1],false).includes(kingPos)
+                                    && indiciesToBoard(enemeyPieces[j][1][0],enemeyPieces[j][1][1]) !== possTile){
+                                        valid = false;
+                                    }
                             }
-                        }
-                        if(valid){
-                           checkedPossibleMoves.push(possibleMoves[i]); 
+                            if(valid){
+                               checkedPossibleMoves.push(possibleMoves[i]); 
+                            }
+                        }else{
+                            
+                            let allEnemyMoves = [];
+                            for(let j = 0; j < enemeyPieces.length && valid; j++){
+                                allEnemyMoves.push(...enemeyPieces[j][0].getViableMoves(nextboard,enemeyPieces[j][1],false))
+                            }
+                            console.log("curr move: ", possibleMoves[i] , "all enemy moves: ", allEnemyMoves)
+                            
+                            if(!allEnemyMoves.includes(possibleMoves[i])){
+                                checkedPossibleMoves.push(possibleMoves[i]); 
+                            }
                         }
                     }
                     //ayyyy!
@@ -102,7 +122,7 @@
                         if(!board.board[x][y+increment]){
                             possTiles.push(indiciesToBoard(x,y+increment));
                             
-                            if(!board.board[x][y+(increment * 2)] && indiciesToBoard(x,y).charAt(0) === pawnMove2){
+                            if(!board.board[x][y+(increment * 2)] && !this.hasMoved){
                                 possTiles.push(indiciesToBoard(x,y+(increment * 2)));
                             }
                         }
@@ -115,7 +135,8 @@
                         //right attack diaganol
                         if(x < 7 && board.board[x+1][y+increment] && board.board[x+1][y+increment].color !== this.color )
                             possTiles.push(indiciesToBoard(x+1,y+increment));
-                        
+                    
+                        //TODO: implement promoting???
                     }
                     
                     if(this.type === 'rook'){
@@ -402,7 +423,6 @@
                     }
                     
                     if(this.type === 'king'){
-                        //TODO: IMPLEMENT 'move into check' CHECKING
                         let moves = [[x+1,y],[x+1,y+1],[x,y+1],[x-1,y+1],[x-1,y],[x-1,y-1],[x,y-1],[x+1,y-1]];
                         for(let i = 0; i < 8; i++){
                             let[potX,potY] = moves[i];
@@ -411,6 +431,20 @@
                                     possTiles.push(indiciesToBoard(potX,potY));
                             }
                         }
+                        
+                        //LEFT CASTLE
+                        if(!this.hasMoved && board.board[0][y] && board.board[0][y].type === "rook" && !board.board[0][y].hasMoved &&
+                            !board.board[x-1][y] && !board.board[x-2][y] ){
+                            possTiles.push(indiciesToBoard(x-2,y))
+                        }
+                        
+                        //RIGHT CASTLE
+                        if(!this.hasMoved && board.board[7][y] && board.board[7][y].type === "rook" && !board.board[7][y].hasMoved &&
+                            !board.board[x+1][y] && !board.board[x+2][y] && !board.board[x+3][y]){
+                            possTiles.push(indiciesToBoard(x+3,y))
+                        }
+                        
+                        
                     }
                     
                     if(check)
@@ -424,13 +458,24 @@
                     return new Piece(this.color,this.type)
                 }
             }
+//            BOARD FOR TESTING CHECK AND STUFF
+//                    this.board = [
+//                        [null,null,null,null,new Piece("white","rook"),null,null,null],
+//                        [null,null,null,null,null,null,null,null],
+//                        [null,null,null,null,null,null,null,null],
+//                        [null,new Piece("black","rook"),null,null,new Piece("white","king"),null,null,new Piece("black","rook")],
+//                        [null,null,null,null,null,null,null,null],
+//                        [null,null,null,null,null,null,null,null],
+//                        [null,null,null,null,null,null,null,null],
+//                        [null,null,null,null,null,null,null,null],
+//                      ]
             
             class Board{
                 constructor(){
                     this.board = [
                         [new Piece("black","rook"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","rook")],
-                        [new Piece("black","knight"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","knight")],
-                        [new Piece("black","bishop"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","bishop")],
+                        [null,new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),null],
+                        [null,new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),null],
                         [new Piece("black","king"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","king")],
                         [new Piece("black","queen"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","queen")],
                         [new Piece("black","bishop"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","bishop")],
@@ -438,6 +483,8 @@
                         [new Piece("black","rook"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","rook")],
                     ]
                 }
+                    
+
                 
                 clone(){
                     let newBoard = [];
@@ -459,7 +506,6 @@
 
             let board = new Board();
             let turn = "white";
-      
             
             function paintBoard(){
                 //The indicies in this function are really ugly because I designed it
@@ -515,6 +561,26 @@
                 }else{
                     turn = "white"
                 }
+                let tiles = $('.board-tile');
+                let done = false;
+                
+                for(let i = 0; i < tiles.length && !done; i++ ){
+                    let [x,y] = boardToIndicies(tiles[i].id);
+                    if(board.board[x][y] && board.board[x][y].color === turn){
+                        let abcdef = board.board[x][y].getViableMoves(board, [x,y], true);
+                        console.log("moves: ", abcdef)
+                        if(abcdef.length !== 0){
+                            done = true;
+                        }
+                    }
+                }
+                
+                if(!done){
+                    alert(`${turn} has Lost the game!`)
+                }
+                
+                paintBoard();
+                
             }
             
             let targetPieceCords;
@@ -544,10 +610,36 @@
             function moveHere(targetTile){
                 let targetPiece = board.board[targetPieceCords[0]][targetPieceCords[1]];
                 let targetCords = boardToIndicies(targetTile.id)
-                board.board[targetCords[0]][targetCords[1]] = targetPiece;
-                board.board[targetPieceCords[0]][targetPieceCords[1]] = null;
+                
+                //handling the special cases of promotion, or castling
+                if(targetPiece.type === "king" && !targetPiece.hasMoved && (targetCords[0] === 1 || targetCords[0] === 6)){
+                    
+                    let rookX, castleDir;
+                    if(targetCords[0] === 1){
+                        rookX = 0;
+                        castleDir = 1;
+                    }else{
+                        rookX = 7;
+                        castleDir = -1;
+                    }
+
+                    rookLocation = [rookX,targetCords[1]]
+                    board.board[targetCords[0]][targetCords[1]] = targetPiece;
+                    board.board[targetCords[0]][targetCords[1]].hasMoved = true;
+                    board.board[targetPieceCords[0]][targetPieceCords[1]] = null;
+                    
+                    board.board[targetCords[0] + castleDir][targetCords[1]] = board.board[rookLocation[0]][rookLocation[1]];
+                    board.board[rookLocation[0]][rookLocation[1]].hasMoved = true;
+                    board.board[rookLocation[0]][rookLocation[1]] = null;
+                }if(targetPiece.type === "pawn" && (targetCords[1] === 0 || targetCords[1] === 7)){
+                    
+                }else{
+                    board.board[targetCords[0]][targetCords[1]] = targetPiece;
+                    board.board[targetCords[0]][targetCords[1]].hasMoved = true;
+                    board.board[targetPieceCords[0]][targetPieceCords[1]] = null;
+                }
+                paintBoard();
                 changeTurn();
-                paintBoard()
                 
             }
             
