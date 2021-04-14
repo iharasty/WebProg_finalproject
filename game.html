@@ -633,7 +633,10 @@
                     board.board[rookLocation[0]][rookLocation[1]].hasMoved = true;
                     board.board[rookLocation[0]][rookLocation[1]] = null;
                 }if(targetPiece.type === "pawn" && (targetCords[1] === 0 || targetCords[1] === 7)){
-                    
+                    targetPiece.type = 'queen';
+                    board.board[targetCords[0]][targetCords[1]] = targetPiece;
+                    board.board[targetCords[0]][targetCords[1]].hasMoved = true;
+                    board.board[targetPieceCords[0]][targetPieceCords[1]] = null;
                 }else{
                     board.board[targetCords[0]][targetCords[1]] = targetPiece;
                     board.board[targetCords[0]][targetCords[1]].hasMoved = true;
@@ -652,9 +655,6 @@
             <div class="dialogue-box">
                 ayyyy~
             </div>
-
-                <button onclick="paintBoard();">here</button>
-
         </div> 
         
         <script type="text/javascript">
