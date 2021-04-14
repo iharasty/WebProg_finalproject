@@ -508,6 +508,7 @@
             let turn = "white";
             
             function paintBoard(){
+                console.log("repainting-board");
                 //The indicies in this function are really ugly because I designed it
                 //for a wrong board.board set up (I did [y,x] cords...)
                 $('.board-tile').remove()
@@ -643,14 +644,24 @@
                 
             }
             
-            paintBoard();
             
         </script>
         <div class="page-wrapper">
             <div class="board-wrapper">
             </div>
-            <button onclick="paintBoard();">here</button>
+            <div class="dialogue-box">
+                ayyyy~
+            </div>
+
+                <button onclick="paintBoard();">here</button>
+
         </div> 
+        
+        <script type="text/javascript">
+        body = document.getElementsByClassName("board-wrapper")[0];
+        body.addEventListener("load", paintBoard(), false);
+        </script>
+
         
     </body>
 
