@@ -9,6 +9,18 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
         
         <script type="text/javascript">
+            
+            /*  TODO LIST:
+             *  -Can't castle thru check
+             *  -Empassant?
+             *  -User Info box 
+                    >who's turn it is
+                    >turn number
+                    >in check?
+             *  -previous move integration
+             *  -board.dump() and board.load() to/fro json functions
+            */
+            
             let letters=["A","B","C","D","E","F","G","H"]
             let images = {
                 "black": {
@@ -30,10 +42,19 @@
             }
             
             let colorSide = {
-                'white':'top',
-                'black':'bottom'
+                'black':'top',
+                'white':'bottom'
             }
-
+            
+            /*
+                PIECE OBJECT
+                represents each piece on the board, intialized with just 2 strings,
+                type and color. Each has an additional of hasMoved which is set to
+                true after each move.
+                
+                NOTE: Pieces don't know where they are, only way to get that
+                is via the BOARD object
+            */
             class Piece {
                 constructor(color, type){
                     this.type = type;
@@ -44,6 +65,16 @@
                     return images[this.color][this.type]
                 }
                 
+                /*  Screens list of potential moves (in the form of a board position list
+                 *  i.e. [A2, B5...]) and ensures that
+                 *      1) Doesn't put you in check
+                 *      2) If you are in check, it does something about it (take or block)
+                 *      3) If your a king, you cant move diretly into check
+                 *  
+                 *  Params: board -> Board object,
+                            position -> current piece position cords
+                            possibleMoves -> list as explained above
+                */
                 pieceCanMove(board,position,possibleMoves){
                     let enemeyPieces = [] //list pairs of the enemy peice its reference[0] & current position[1]
                     let kingPos = null;
@@ -106,6 +137,20 @@
                     console.log(this.color,this.type,possibleMoves,checkedPossibleMoves);
                     return checkedPossibleMoves;
                 }
+                
+                /*  getViableMoves
+                 *  
+                 *  Takes in a board set up and the current piece getting checked and 
+                 *  returns an list of board Positions [A2, B6, ...]
+                 *
+                 *  Params:
+                 *  board -> current board object
+                 *  position -> list of current cords
+                 *  check -> because 'pieceCanMove' has to call this function to see if
+                 *           the ENEMY pieces can move somewhere after a given move, this
+                 *           boolean value indicates wether or not its the current players turn
+                 *           or just the enemy piece check to avoid an infinite loop
+                */
                 
                 getViableMoves(board, position, check){
                     
@@ -432,16 +477,16 @@
                             }
                         }
                         
-                        //LEFT CASTLE
-                        if(!this.hasMoved && board.board[0][y] && board.board[0][y].type === "rook" && !board.board[0][y].hasMoved &&
-                            !board.board[x-1][y] && !board.board[x-2][y] ){
-                            possTiles.push(indiciesToBoard(x-2,y))
-                        }
-                        
                         //RIGHT CASTLE
                         if(!this.hasMoved && board.board[7][y] && board.board[7][y].type === "rook" && !board.board[7][y].hasMoved &&
-                            !board.board[x+1][y] && !board.board[x+2][y] && !board.board[x+3][y]){
-                            possTiles.push(indiciesToBoard(x+3,y))
+                            !board.board[x+1][y] && !board.board[x+2][y] ){
+                            possTiles.push(indiciesToBoard(x+2,y))
+                        }
+                        
+                        //LEFT CASTLE
+                        if(!this.hasMoved && board.board[0][y] && board.board[0][y].type === "rook" && !board.board[0][y].hasMoved &&
+                            !board.board[x-1][y] && !board.board[x-2][y] && !board.board[x-3][y]){
+                            possTiles.push(indiciesToBoard(x-2,y))
                         }
                         
                         
@@ -473,14 +518,14 @@
             class Board{
                 constructor(){
                     this.board = [
-                        [new Piece("black","rook"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","rook")],
-                        [null,new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),null],
-                        [null,new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),null],
-                        [new Piece("black","king"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","king")],
-                        [new Piece("black","queen"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","queen")],
-                        [new Piece("black","bishop"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","bishop")],
-                        [new Piece("black","knight"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","knight")],
-                        [new Piece("black","rook"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","rook")],
+                        [new Piece("white","rook"),new Piece("white","pawn"),null,null,null,null,new Piece("black","pawn"),new Piece("black","rook")],
+                        [new Piece("white","knight"),new Piece("white","pawn"),null,null,null,null,new Piece("black","pawn"),new Piece("black","knight")],
+                        [new Piece("white","bishop"),new Piece("white","pawn"),null,null,null,null,new Piece("black","pawn"),new Piece("black","bishop")],
+                        [new Piece("white","queen"),new Piece("white","pawn"),null,null,null,null,new Piece("black","pawn"),new Piece("black","queen")],
+                        [new Piece("white","king"),new Piece("white","pawn"),null,null,null,null,new Piece("black","pawn"),new Piece("black","king")],
+                        [new Piece("white","bishop"),new Piece("white","pawn"),null,null,null,null,new Piece("black","pawn"),new Piece("black","bishop")],
+                        [new Piece("white","knight"),new Piece("white","pawn"),null,null,null,null,new Piece("black","pawn"),new Piece("black","knight")],
+                        [new Piece("white","rook"),new Piece("white","pawn"),null,null,null,null,new Piece("black","pawn"),new Piece("black","rook")],
                     ]
                 }
                     
@@ -503,11 +548,12 @@
                 }
             }
             
-
+            /*================================game handling logic===========================*/
+            
             let board = new Board();
             let turn = "white";
             
-            function paintBoard(){
+            function paintBoard(origTileId, newTileId){
                 console.log("repainting-board");
                 //The indicies in this function are really ugly because I designed it
                 //for a wrong board.board set up (I did [y,x] cords...)
@@ -544,6 +590,13 @@
                         $(".board-wrapper").append(tile);
                     }
                 }
+                
+                console.log('orig', origTileId, 'new', newTileId)
+                if(origTileId && newTileId){
+                    $(`#${origTileId}`).addClass('last-move');
+                    $(`#${newTileId}`).addClass('last-move');
+                }
+                
             }
             
             function indiciesToBoard(i, j){
@@ -609,14 +662,15 @@
             }
             
             function moveHere(targetTile){
+                
                 let targetPiece = board.board[targetPieceCords[0]][targetPieceCords[1]];
                 let targetCords = boardToIndicies(targetTile.id)
                 
                 //handling the special cases of promotion, or castling
-                if(targetPiece.type === "king" && !targetPiece.hasMoved && (targetCords[0] === 1 || targetCords[0] === 6)){
+                if(targetPiece.type === "king" && !targetPiece.hasMoved && (targetCords[0] === 2 || targetCords[0] === 6)){
                     
                     let rookX, castleDir;
-                    if(targetCords[0] === 1){
+                    if(targetCords[0] === 2){
                         rookX = 0;
                         castleDir = 1;
                     }else{
@@ -632,7 +686,7 @@
                     board.board[targetCords[0] + castleDir][targetCords[1]] = board.board[rookLocation[0]][rookLocation[1]];
                     board.board[rookLocation[0]][rookLocation[1]].hasMoved = true;
                     board.board[rookLocation[0]][rookLocation[1]] = null;
-                }if(targetPiece.type === "pawn" && (targetCords[1] === 0 || targetCords[1] === 7)){
+                }if(targetPiece.type === "pawn" && (targetCords[1] === 7 || targetCords[1] === 0)){
                     targetPiece.type = 'queen';
                     board.board[targetCords[0]][targetCords[1]] = targetPiece;
                     board.board[targetCords[0]][targetCords[1]].hasMoved = true;
@@ -642,7 +696,9 @@
                     board.board[targetCords[0]][targetCords[1]].hasMoved = true;
                     board.board[targetPieceCords[0]][targetPieceCords[1]] = null;
                 }
-                paintBoard();
+                
+                
+                paintBoard(targetTile.id, indiciesToBoard(targetCords[0],targetCords[1]));
                 changeTurn();
                 
             }
@@ -653,7 +709,9 @@
             <div class="board-wrapper">
             </div>
             <div class="dialogue-box">
-                ayyyy~
+                <div class="child-box">test1</div>
+                <div class="child-box">test2</div>
+                <div class="child-box">test3</div>
             </div>
         </div> 
         
