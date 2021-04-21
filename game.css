@@ -6,6 +6,16 @@
 
 .dialogue-box{
     border: 4px dashed red;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-content: center;
+    padding: 10%
+}
+
+.child-box{
+    flex-basis: 1;
+    border: 1px dashed blue;
 }
 
 .board-wrapper{
@@ -26,6 +36,10 @@
 img{
     object-fit: contain;
     display: block;
+}
+
+.last-played{
+    border: 1px dashed green;
 }
 
 /*
