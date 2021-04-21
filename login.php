@@ -1,72 +1,55 @@
-<html>
-	<head>
+<?php
+
+session_start();
+require_once('DBfuncs.php');
+
+?><html>
+		<head>
+			<link rel='stylesheet' href='./static/css/login.css'/>
+
 
     </head>
-
     <body>
+		<div class='page-wrapper'>
+			<div class='form-wrapper'>
+      <form action='./login.php' method='POST'>
+        <div class='input-wrapper'>
+	        <label for='username'>Username</label>
+	        <input type='text' id='username' name = 'username' value=''
+	        />
+				</div>
 
-      <form action='./login.php' action='GET'>
-        
-        <label for='email'>Email</label>
-        <input type='text' id='email' name = 'email' value=''
-        />
+				<div class='input-wrapper'>
+	        <label for='password'>Password</label>
+	        <input type='text' id='password' name = 'password' value=''
+	        />
+        </div>
 
-        <label for='password'>Password</label>
-        <input type='text' id='password' name = 'password' value=''
-        />
-        
-        <input type='submit' value='submit'/>
+				<div class='input-wrapper'>
+        	<input type='submit' value='submit'/>
+				</div>
+
 				<br/>
 				<?php
-					$email = $_GET["email"];
-					$pass = $_GET["password"];
-					echo "$email, $pass";
 
-					$hostname = '127.0.0.1';
-					$username = 'harastyj6';
-					$password = '1Determinedbird!';
+					if(isset( $_POST["username"]) && isset( $_POST["username"])  ){
+						$username = $_POST["username"];
+						$pass = $_POST["password"];
 
-					try{
-						$dbh = new PDO("mysql:host=$hostname;dbname=$username",$username,$password);
-						echo 'connected to DB!';
-					}catch(PDOException $e){
-						die ('PDO error: cannot connect: ' . $e->getMessage() );
+						$dbh = connectDB();
+						/*$r = checkUserNamePassword($dbh, $username, $pass);
+						echo $r;
+						*/
+						if(checkUserNamePassword($dbh, $username, $pass)){
+								header('location: home.php');
+						}else{
+								echo "Wrong Login Credentials";
+						}
 					}
 
-					echo '<br/>';
-
-					try {
-	    				// set up query
-				    $phone_query = "SELECT * FROM users WHERE email=:email";
-				    // prepare to execute (this is a security precaution)
-				    $stmt = $dbh->prepare($phone_query);
-						$stmt->bindParam(':email',$email);
-				    // run query
-				    $stmt->execute();
-				    // get all the results from database into array of objects
-				    $users = $stmt->fetchAll(PDO::FETCH_OBJ);
-				    // release the statement
-				    $stmt = null;
-						echo "<br/> query successful, $users";
-						}
-						catch(PDOException $e)
-						{
-						    die ('PDO error fetching data": ' . $e->getMessage() );
-						}
-
-
-					echo '<br/>';
-					echo "here!";
-	
-					foreach ( $users as $user ){
-						echo "here";
-						echo " $user->id, $user->password ";
-					}
-
-					header('location: home.php');
 				?>
       </form>
-
-
+			</div>
+		</div>
     </body>
 </html>
