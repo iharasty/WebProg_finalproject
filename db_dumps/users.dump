@@ -27,8 +27,11 @@ CREATE TABLE `users` (
   `username` varchar(50) NOT NULL,
   `email` varchar(100) NOT NULL,
   `password` varchar(100) NOT NULL,
+	`wins` int DEFAULT 0,
+	`losses` int DEFAULT 0,
+	`gamesstarted` int DEFAULT 0,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -37,7 +40,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'user1','user1@email.com','unhashed1'),(2,'user2','user2@email.com','unhashed2'),(3,'isaac','isaac@email.com','$2y$10$wV/P.CKU5nn84eDunQnoE..1zcDs6YJU9Uktp9U7rAUoDILW9ZVBa'),(4,'isaac2','isaac2@email.com','$2y$10$RbF/bqpwwPzS.KRpOV0rIO5ISa/oyARuVMR08YpPfm8GGOzY8w6F6');
+INSERT INTO `users` (id,username,email,password) VALUES (14,'test','test','$2y$10$LaV6xSWHBWaZgncsFtfz4elL/HO2xiiDzZDC1QmzjE0wbwq0tLeG.'),(15,'test1','test1@gmail.com','$2y$10$yfTizvcYb4UjyQKEWr4FFuAgslCI5uHxM3Yi.d/JaNIbfwbnKkB42'),(16,'isaac','isaac','$2y$10$hp0SchjD7W9ida3IkeWQ9eF2HLK/7T3cdY2a8LsAAeBcb4xA/eoT.'),(17,'isaac2','isaac2','$2y$10$9HtbsFYb9HB0MmAWJO7/PezMArgX6bFTH/02VdqL5rbLkFPAr2tL2');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -50,4 +53,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-04-19 19:49:20
+-- Dump completed on 2021-04-27 15:04:04

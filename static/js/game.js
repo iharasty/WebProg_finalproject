@@ -24,16 +24,31 @@ let colorSide = {
 'black':'bottom'
 }
 
+let colors = {
+	'b':'black',
+	'w':'white'
+}
+
+let pieceName = {
+	'r': 'rook',
+	'n': 'knight',
+	'b': 'bishop',
+	'q': 'queen',
+	'k': 'king',
+	'p': 'pawn',
+}
+
 class Piece {
-constructor(color, type){
-  this.type = type;
-  this.color = color;
+constructor(id){
+  this.type = pieceName[id.substring(1,2)];
+  this.color = colors[id.substring(0,1)];
   this.hasMoved = false;
+	this.id = id;
 }
 getImgSrc(){
   return images[this.color][this.type]
 }
-
+sadfa
 pieceCanMove(board,position,possibleMoves){
   let enemeyPieces = [] //list pairs of the enemy peice its reference[0] & current position[1]
   let kingPos = null;
@@ -445,7 +460,7 @@ getViableMoves(board, position, check){
 }
 
 clone(){
-  return new Piece(this.color,this.type)
+  return new Piece(this.id)
 }
 }
 //            BOARD FOR TESTING CHECK AND STUFF
@@ -461,16 +476,17 @@ clone(){
 //                      ]
 
 class Board{
+
 constructor(){
   this.board = [
-      [new Piece("black","rook"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","rook")],
-      [null,new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),null],
-      [null,new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),null],
-      [new Piece("black","king"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","king")],
-      [new Piece("black","queen"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","queen")],
-      [new Piece("black","bishop"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","bishop")],
-      [new Piece("black","knight"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","knight")],
-      [new Piece("black","rook"),new Piece("black","pawn"),null,null,null,null,new Piece("white","pawn"),new Piece("white","rook")],
+      [new Piece("br0"),new Piece("bp0"),null,null,null,null,new Piece("wp0"),new Piece("wr0")],
+      [new Piece("bn0"),new Piece("bp1"),null,null,null,null,new Piece("wp1"),new Piece("wn0")],
+      [new Piece("bb0"),new Piece("bp2"),null,null,null,null,new Piece("wp2"),new Piece("wb0")],
+      [new Piece("bk0"),new Piece("bp3"),null,null,null,null,new Piece("wp3"),new Piece("wk0")],
+      [new Piece("bq0"),new Piece("bp4"),null,null,null,null,new Piece("wp4"),new Piece("wq0")],
+      [new Piece("bb1"),new Piece("bp5"),null,null,null,null,new Piece("wp5"),new Piece("wb1")],
+      [new Piece("bn1"),new Piece("bp6"),null,null,null,null,new Piece("wp6"),new Piece("wn1")],
+      [new Piece("br1"),null,null,null,null,null,new Piece("wp7"),new Piece("wr1")],
   ]
 }
 
@@ -491,6 +507,71 @@ clone(){
   newBoardObject.board = newBoard;
   return newBoardObject;
 }
+
+load(jsonDict){
+
+	let newBoard = [];
+
+	for(let i = 0; i < 8; i++){
+		newBoard[i] = [];
+		for(let j = 0; j < 8; j++){
+			newBoard[i][j] = null;
+		}
+	}
+
+	console.log(newBoard);
+
+	let pieces=  Object.keys(jsonDict);
+
+	pieces.forEach( element => {
+
+		let [x,y] = boardToIndicies(jsonDict[element]);
+		newBoard[x][y] = new Piece(element);
+
+	})
+
+	this.board = newBoard;
+
+}
+
+/*dump()
+ *Turns the current board state and puts it into a json
+ *to be stored easier by the DB as id:tilename pairs
+ *
+ *NOTE: turns none-existing/already taken pieces into FALSES,
+ *			however, they will be represented as NULLS in the DB
+*/
+dump(){
+
+	let allPieces = ["wp0","wp1","wp2","wp3","wp4","wp5","wp6","wp7","bp0","bp1","bp2","bp3","bp4","bp5","bp6","bp7",
+									 "wr0","wr1","wb0","wb1","wn0","wn1","wk0","wq0","br0","br1","bb0","bb1","bn0","bn1","bk0","bq0"];
+
+	let dict = {};
+
+	for(let x = 0; x < 8 ; x++){
+		for(let y = 0; y < 8; y++){
+
+			if(this.board[x][y]){
+				let currPiece = this.board[x][y];
+				let tile= indiciesToBoard(x,y);
+				dict[currPiece.id] = tile;
+			}
+
+		}
+	}
+
+	allPieces.forEach( element => {
+		console.log(element, " is in? " + (element in dict));
+		if(! (element in dict)){
+			console.log("tada!");
+			dict[element] = false;
+		}
+	})
+
+	return dict;
+
+}
+
 }
 
 
@@ -594,7 +675,7 @@ if(targetPiece && targetPiece.color === turn){
       $('#' + selectedTiles[i]).addClass('active');
       $('#' + selectedTiles[i]).removeAttr('onclick')
       $('#' + selectedTiles[i]).attr('onclick','moveHere(this)')
-  }
+  	}
 }
 }
 
@@ -635,3 +716,44 @@ if(targetPiece.type === "king" && !targetPiece.hasMoved && (targetCords[0] === 1
 paintBoard();
 changeTurn();
 
+
+}
+
+
+//AJAX CALLS
+
+let timedQuery;
+
+function startTimedQuery(gameId) {
+
+	timeQuery = setInterval(getData(gameID), 5000);
+
+}
+
+function getData(gameId){
+
+	let myData = {gameId: gameId};
+
+	$.get({url:"./data.php",data: myData,
+				 success: function(result){
+					console.log(result);
+				}
+			})
+}
+
+function postData(gameId){
+
+	//console.log('test');
+
+	let myData = {gameId: gameId, ...board.dump() };
+
+	$.post({url:"./data.php",data: myData,
+				 success: function(result){
+					console.log(result);
+					console.log(typeof(result));
+					let jsonObj = JSON.parse(result);
+					console.log(jsonObj)
+				}
+			})
+
+}
