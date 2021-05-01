@@ -1,0 +1,57 @@
+.main-section{
+	flex-direction: column;
+	background: white;
+}
+
+.username-section{
+	display:flex;
+	justify-content: space-between;
+	align-items:center;
+}
+
+.username-wrapper{
+	font-size:3rem;
+	text-decoration: underline;
+}
+
+.friend-button{
+	display:flex;
+	justify-content: space-between;
+}
+
+button{
+	padding: 2% 5% 2% 5%;
+	height:100%;
+}
+
+.is-friend-wrapper{
+	font-style:italic;
+	font-size: 1.5rem;
+}
+
+.profile-stats > table{
+	width: 100%;
+}
+
+.friends-wrapper{
+	display: grid;
+	grid-template-columns: repeat(4, 25%);
+}
+
+.friend{
+	font-size: 1.5rem;
+	padding: 10%;
+}
+
+.friend-self{
+	font-weight: bold;
+}
+
+th{
+	font-size: 2rem;
+}
+
+td{
+	text-align:center;
+	font-size: 1.5rem;
+}

@@ -1,0 +1,27 @@
+.main-section{
+	background: white;
+}
+
+.results-wrapper{
+	width:100%;
+}
+
+.result-wrapper{
+	margin: 0.5rem;
+	padding: 2rem;
+	border: 1px solid black;
+	width: 88%;
+	/*cursor: pointer;*/
+	display: flex;
+	justify-content: space-between;
+}
+
+.even{
+	background:	rgba(200,0,0,0.6);
+}
+
+.odd{
+	background:	rgba(200,100,50,0.6);
+}
+
+

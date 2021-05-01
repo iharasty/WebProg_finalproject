@@ -1,0 +1,95 @@
+* {
+	padding: 0px;
+	margin: 0px;
+}
+
+.page-wrapper{
+	height:200%;
+	width:100%;
+	padding:0px;
+	margin:0px;
+	flex-direction: column;
+	align-content: flex-start;
+  background: linear-gradient(90deg, #93a9e6, #69718a);
+}
+
+.nav-bar{
+	width:100%;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	background-color: cyan;
+	align-self: flex-start;
+	height: 60px;
+}
+
+.website-logo{
+	flex-grow: 5;
+}
+
+.nav-bar-right{
+	flex-grow: 1;
+	display:flex;
+	justify-content: space-between;
+}
+
+.invis{
+	height:0%;
+	width:0%;
+	
+}
+
+.main-section{
+	display:flex;
+	width: clamp(500px, 80%, 1500px);
+	margin: 10%;
+	margin-top:2%;
+	border: 1px solid red;
+	flex-direction: row;
+}
+
+table{
+	padding: 5%;
+	border: 1px solid black;
+}
+
+td{
+	padding: 5%;
+}
+
+.section{
+	padding: 5%;
+}
+
+.games-section{
+	display:flex;
+	flex-direction:column;
+	flex-grow: 2;
+	background-color: white;
+}
+
+.friends{
+	border: 2px solid blue;
+	padding: 10%;
+	width: 50%;
+	/*height: 50%;*/
+	font-size: 1.5rem;
+}
+
+.friends-section{
+	background: grey;
+	flex-grow:2;
+	border: 1px solid blue;
+	display:flex;
+	align-items:center;
+	flex-direction: column;
+	justify-content: space-around;
+}
+
+.accepted-friends{
+	flex-grow:2;
+}
+
+.unaccepted-friends{
+	flex-grow:1;
+}

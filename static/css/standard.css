@@ -1,0 +1,14 @@
+*{
+        wrapper: 0%;
+        margin: 0%;
+}
+
+.page-wrapper{
+        height: 100%;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 1px solid blue;
+        background: linear-gradient(90deg, #93a9e6, #69718a)
+}
