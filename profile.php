@@ -16,22 +16,36 @@
 		$viewing_self= True;
 	}
 
+	if($_POST["challenge"] == "accept"){
+		//echo "accepted!";
+		acceptChallenge($dbh, $user_id, $viewing_uid);
+	}
+	if($_POST["challenge"] == "decline"){
+		//echo "declined!";
+		declineChallenge($dbh, $user_id, $viewing_uid);
+	}
+	if($_POST["challenge"] == "initiate"){
+		//echo "challenged!";
+		initiateChallenge($dbh, $user_id, $viewing_uid, "white");
+	}
+
   if($_POST["action"] == "remove"){
-    echo "removed!";
+    //echo "removed!";
 		removeFriend($dbh, $user_id, $viewing_uid);
 	}
   if($_POST["action"] == "add"){
-    echo "added!";
+    //echo "added!";
 		addFriend($dbh, $user_id, $viewing_uid);
 	}
   if($_POST["action"] == "accept"){
-    echo "accepted!";
+    //echo "accepted!";
 		acceptFriend($dbh, $user_id, $viewing_uid);
 	}
 	//add 'Dont Accept!!!!'
 
 	$is_friend = isFriend($dbh, $viewing_uid, $user_id);
-	//echo $is_friend;
+	$is_challenged = isChallenged($dbh, $viewing_uid, $user_id);
+	echo $is_challenged;
 ?>
 <html>
 
@@ -91,18 +105,32 @@
 			<?php
 					if($is_friend == 0){
 						echo "<form action='./profile.php?userid=$viewing_uid' method='POST'> <input class='invis' name='action' value='add'/>".
-									"<button type='submit'> add friend? </button> </form>";
+									"<button type='submit'> Add friend </button> </form>";
 					}elseif($is_friend==1){
 						echo "<form action='./profile.php?userid=$viewing_uid' method='POST'> <input class='invis' name='action' value='accept'/>".
-									"<button type='submit'> accept request? </button> </form>";
+									"<button type='submit'> Accept request? </button> </form>";
 					}elseif($is_friend == 2){
 						echo "waiting for them <br/> to respond...";
 					}elseif($is_friend == 3){
 						echo "<form action='./profile.php?userid=$viewing_uid' method='POST'> <input class='invis' name='action' value='remove'/>".
-									"<button type='submit'> remove friend? </button> </form>";
+									"<button type='submit'> Remove friend </button> </form>";
 					}
 
-				echo "<button> Challenge? </button>";
+
+					if($is_challenged == 0){
+						echo "<form action='./profile.php?userid=$viewing_uid' method='POST'> <input class='invis' name='challenge' value='initiate'/>".
+									"<button type='submit'> Challenge </button> </form>";
+					//WRITE JS TO HANDLE THIS CASE!!!!!
+					}elseif($is_challenged==2){
+						echo "<form action='./profile.php?userid=$viewing_uid' method='POST'> <input class='invis' name='challenge' value='accept'/>".
+									"<button type='submit'> Accept Game </button> </form>";
+						echo "<form action='./profile.php?userid=$viewing_uid' method='POST'> <input class='invis' name='challenge' value='decline'/>".
+									"<button type='submit'> Decline Game </button> </form>";
+					}elseif($is_challenged == 1){
+						echo "waiting for them <br/> to respond...";
+						echo "<form action='./profile.php?userid=$viewing_uid' method='POST'> <input class='invis' name='challenge' value='decline'/>".
+									"<button type='submit'> Decline Game </button> </form>";
+					}
 			?>
 
 		</div>
@@ -116,7 +144,7 @@
 
 			<table class="game-stats">
 			<?php
-				$finished =  $viewing_user->wins +  $viewing_user->wins;
+				$finished =  $viewing_user->wins +  $viewing_user->losses;
 				echo "<th>Wins</th>";
 				echo "<th>Losses</th>";
 				echo "<th>Games Finished</th>";
@@ -151,11 +179,35 @@
 		</div>
 
 		<div class="old-games section">
-		<h1> Finished Games </h1>
+
 			<?php
-				//get all of the games with this user where the game is completed
-				//show a link to that game with the last game position
+					$finished_games = getFinishedGames($dbh, $viewing_uid);
+					$num_finished_games = count($finished_games);
 			?>
+
+			<h1> Finished Games</h1>
+
+			<h3 class="num-games"> 
+				<?php echo "<span> $viewing_user->username has finished $num_finished_games game(s)</span>";?>
+			</h3>
+
+			<table class="game-stats">
+				<th> Game Id </th>
+				<th> Other Player </th>
+				<th> See Game Here</th>
+
+				<?php
+
+					foreach($finished_games as $game){
+						echo "<tr>";
+						echo "<td>$game->gameid</td>";
+						echo "<td>$game->username</td>";
+            echo "<td> <button onclick='window.location.href=\"./game.php?gameId=$game->gameid\"'> Play </button>"; 
+						echo "</tr>";
+					}
+
+					?>
+			</table>
 
 		</div>
 

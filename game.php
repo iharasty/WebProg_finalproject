@@ -1,25 +1,19 @@
 <?php
 
-/*
-THINGS TO CONSIDER ON A GAME PAGE
+session_start();
+$game_id = $_GET["gameId"];
+$user_id = $_SESSION["ID"];
 
-0)Game id is found
-1)The curr user is one of the two users
-2)
-*/
+?><html>
 
-//require_once('./DBfuncs.php');
-
-?>
-<html>
-
-<!--
     <head>
     <title>Beta Chess Game</title>
     <link rel='stylesheet' href='./static/css/game.css' />
+    <link rel='stylesheet' href='./static/css/home.css' />
     </head>
     <body>
 
+				<?php include('./navbar.php') ?>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
         <script src="./static/js/game.js" type="text/javascript"></script>
@@ -28,40 +22,27 @@ THINGS TO CONSIDER ON A GAME PAGE
             <div class="board-wrapper">
             </div>
             <div class="dialogue-box">
-                <div class="child-box">test1</div>
-                <div class="child-box">test2</div>
-                <div class="child-box">test3</div>
+                <div class="child-box white-box">White: <span id="white-user"> </span></div>
+                <div class="child-box turn-box">Turn: <span id="turn-num"> </span></div>
+                <div class="child-box black-box"> Black: <span id="black-user"> </span></div>
             </div>
         </div>
        <script type="text/javascript">
 	        body = document.getElementsByClassName("board-wrapper")[0];
-	        //body.addEventListener("load", paintBoard(), false);
-					body.addEventListener("load", getData(1) , false);
+					body.addEventListener("load", onloadGame(), false);
 
-					function bs(){
-						board.load({'wq0':'A1'});
-						paintBoard();
+					function onloadGame(){
+						setMyId(<?php echo $user_id; ?>);
+						setGameId(<?php echo $_GET["gameId"]; ?>);
+						startTimedQuery();
+						getData();
 					}
 
-			//<?php getGame
-
-
-//          setInterval(function() {alert("test") },1000)
-
-
-/*					$.get({url: "./data.php", data: {attr0: "woahhh", attr1: "woahh1"},
-								   success: function(result){
-										console.log(result);
-									}
-								});
-*/
 
 				</script>
 
 
     </body>
 
--->
 
-<h1> test </h1>
 </html>

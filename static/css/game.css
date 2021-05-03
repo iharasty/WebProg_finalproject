@@ -10,13 +10,25 @@
     flex-direction: column;
     justify-content: space-between;
     align-content: center;
-    padding: 10%
+    padding: 10%;
+		background: white;
 }
 
 .child-box{
     flex-basis: 1;
     border: 1px dashed blue;
+		padding: 10%;
+		font-size: 1.25 rem;
 }
+
+.turn-active{	
+		border: 8px solid black;
+}
+/*
+#black-user #white-user{
+		font-style: italic;
+}
+*/
 
 .board-wrapper{
     justify-content: center;

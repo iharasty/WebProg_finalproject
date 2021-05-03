@@ -28,6 +28,7 @@ CREATE TABLE `pvpgames` (
   `uidaccept` int NOT NULL,
   `initcolor` enum('black','white') DEFAULT NULL,
   `accepted` tinyint(1) DEFAULT '0',
+  `turnnum` int DEFAULT '1',
   `wp0` char(3) DEFAULT 'G10',
   `wp1` char(3) DEFAULT 'G20',
   `wp2` char(3) DEFAULT 'G30',
@@ -36,15 +37,15 @@ CREATE TABLE `pvpgames` (
   `wp5` char(3) DEFAULT 'G60',
   `wp6` char(3) DEFAULT 'G70',
   `wp7` char(3) DEFAULT 'G80',
-	`wr0` char(2) DEFAULT 'H1',
+  `wr0` char(2) DEFAULT 'H1',
   `wn0` char(2) DEFAULT 'H2',
   `wb0` char(2) DEFAULT 'H3',
   `wk0` char(2) DEFAULT 'H4',
   `wq0` char(2) DEFAULT 'H5',
   `wb1` char(2) DEFAULT 'H6',
   `wn1` char(2) DEFAULT 'H7',
-  `wr1` char(2) DEFAULT 'H8',  
-	`bp0` char(3) DEFAULT 'B10',
+  `wr1` char(2) DEFAULT 'H8',
+  `bp0` char(3) DEFAULT 'B10',
   `bp1` char(3) DEFAULT 'B20',
   `bp2` char(3) DEFAULT 'B30',
   `bp3` char(3) DEFAULT 'B40',
@@ -52,7 +53,7 @@ CREATE TABLE `pvpgames` (
   `bp5` char(3) DEFAULT 'B60',
   `bp6` char(3) DEFAULT 'B70',
   `bp7` char(3) DEFAULT 'B80',
-	`br0` char(2) DEFAULT 'A1',
+  `br0` char(2) DEFAULT 'A1',
   `bn0` char(2) DEFAULT 'A2',
   `bb0` char(2) DEFAULT 'A3',
   `bk0` char(2) DEFAULT 'A4',
@@ -60,7 +61,6 @@ CREATE TABLE `pvpgames` (
   `bb1` char(2) DEFAULT 'A6',
   `bn1` char(2) DEFAULT 'A7',
   `br1` char(2) DEFAULT 'A8',
-
   PRIMARY KEY (`gameid`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -71,7 +71,7 @@ CREATE TABLE `pvpgames` (
 
 LOCK TABLES `pvpgames` WRITE;
 /*!40000 ALTER TABLE `pvpgames` DISABLE KEYS */;
-INSERT INTO `pvpgames` (gameid, uidinit, uidaccept, initcolor, accepted, wp0) VALUES (1,14,15,'white',0,'G1'),(2,14,15,'black',1,'G1'),(3,16,15,'white',0,'G1'),(4,17,15,'black',1,'G1');
+INSERT INTO `pvpgames` VALUES (1,14,15,'white',0,1,'G10','G20','G30','G40','G50','G60','G70','G80','H1','H2','H3','H4','H5','H6','H7','H8','B10','B20','B30','B40','B50','B60','B70','B80','A1','A2','A3','A4','A5','A6','A7','A8'),(2,14,15,'black',1,1,'G10','G20','G30','G40','G50','G60','G70','G80','H1','H2','H3','H4','H5','H6','H7','H8','B10','B20','B30','B40','B50','B60','B70','B80','A1','A2','A3','A4','A5','A6','A7','A8'),(3,16,15,'white',0,1,'G10','G20','G30','G40','G50','G60','G70','G80','H1','H2','H3','H4','H5','H6','H7','H8','B10','B20','B30','B40','B50','B60','B70','B80','A1','A2','A3','A4','A5','A6','A7','A8'),(4,17,15,'black',1,1,'G10','G20','G30','G40','G50','G60','G70','G80','H1','H2','H3','H4','H5','H6','H7','H8','B10','B20','B30','B40','B50','B60','B70','B80','A1','A2','A3','A4','A5','A6','A7','A8');
 /*!40000 ALTER TABLE `pvpgames` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -84,4 +84,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-05-01 12:54:44
+-- Dump completed on 2021-05-01 16:31:36

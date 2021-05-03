@@ -475,10 +475,8 @@ clone(){
 //                        [null,null,null,null,null,null,null,null],
 //                      ]
 
-class Board{
-
-constructor(){
-  this.board = [
+/*
+	[
       [new Piece("br0"),new Piece("bp0"),null,null,null,null,new Piece("wp0"),new Piece("wr0")],
       [new Piece("bn0"),new Piece("bp1"),null,null,null,null,new Piece("wp1"),new Piece("wn0")],
       [new Piece("bb0"),new Piece("bp2"),null,null,null,null,new Piece("wp2"),new Piece("wb0")],
@@ -488,6 +486,12 @@ constructor(){
       [new Piece("bn1"),new Piece("bp6"),null,null,null,null,new Piece("wp6"),new Piece("wn1")],
       [new Piece("br1"),null,null,null,null,null,new Piece("wp7"),new Piece("wr1")],
   ]
+*/
+
+class Board{
+
+constructor(){
+  this.board = []
 }
 
 
@@ -510,6 +514,9 @@ clone(){
 
 load(jsonDict){
 
+	let allPieces = ["wp0","wp1","wp2","wp3","wp4","wp5","wp6","wp7","bp0","bp1","bp2","bp3","bp4","bp5","bp6","bp7",
+									 "wr0","wr1","wb0","wb1","wn0","wn1","wk0","wq0","br0","br1","bb0","bb1","bn0","bn1","bk0","bq0"];
+
 	let newBoard = [];
 
 	for(let i = 0; i < 8; i++){
@@ -519,14 +526,16 @@ load(jsonDict){
 		}
 	}
 
-	console.log(newBoard);
+	//console.log(newBoard);
 
-	let pieces=  Object.keys(jsonDict);
+	let pieces=Object.keys(jsonDict);
 
 	pieces.forEach( element => {
-
-		let [x,y] = boardToIndicies(jsonDict[element]);
-		newBoard[x][y] = new Piece(element);
+		//console.log("element: ", element , typeof(element) , " is in allP: ", (allPieces.includes(element)));
+		if( allPieces.includes(element) && jsonDict[element]){
+			let [x,y] = boardToIndicies(jsonDict[element]);
+			newBoard[x][y] = new Piece(element);
+		}
 
 	})
 
@@ -564,7 +573,7 @@ dump(){
 		console.log(element, " is in? " + (element in dict));
 		if(! (element in dict)){
 			console.log("tada!");
-			dict[element] = false;
+			dict[element] = null;
 		}
 	})
 
@@ -576,7 +585,7 @@ dump(){
 
 
 let board = new Board();
-let turn = "white";
+let turn, myColor; //CHANGED
 
 function paintBoard(){
 console.log("repainting-board");
@@ -640,15 +649,17 @@ for(let i = 0; i < tiles.length && !done; i++ ){
   let [x,y] = boardToIndicies(tiles[i].id);
   if(board.board[x][y] && board.board[x][y].color === turn){
       let abcdef = board.board[x][y].getViableMoves(board, [x,y], true);
-      console.log("moves: ", abcdef)
+      //console.log("moves: ", abcdef)
       if(abcdef.length !== 0){
           done = true;
       }
   }
 }
 
+/*NEXT PLAYER HAS NO VIABLE MOVES, LOSES */
 if(!done){
-  alert(`${turn} has Lost the game!`)
+  alert (`${turn} has lost!`);
+	postGameEnd();
 }
 
 paintBoard();
@@ -668,7 +679,7 @@ let cords = boardToIndicies(selectedTile.id);
 let targetPiece = board.board[cords[0]][cords[1]];
 
 //TURN ENFORCEMENT
-if(targetPiece && targetPiece.color === turn){
+if(targetPiece && targetPiece.color === turn && turn === myColor){
   targetPieceCords = cords;
   let selectedTiles = targetPiece.getViableMoves(board, cords, true);
   for(let i = 0; i < selectedTiles.length; i++){
@@ -676,8 +687,11 @@ if(targetPiece && targetPiece.color === turn){
       $('#' + selectedTiles[i]).removeAttr('onclick')
       $('#' + selectedTiles[i]).attr('onclick','moveHere(this)')
   	}
+	}
 }
-}
+
+
+let gameId;
 
 function moveHere(targetTile){
 let targetPiece = board.board[targetPieceCords[0]][targetPieceCords[1]];
@@ -714,7 +728,9 @@ if(targetPiece.type === "king" && !targetPiece.hasMoved && (targetCords[0] === 1
   board.board[targetPieceCords[0]][targetPieceCords[1]] = null;
 }
 paintBoard();
+
 changeTurn();
+postData();
 
 
 }
@@ -723,37 +739,208 @@ changeTurn();
 //AJAX CALLS
 
 let timedQuery;
+let myId;
 
-function startTimedQuery(gameId) {
+function startTimedQuery() {
 
-	timeQuery = setInterval(getData(gameID), 5000);
+	timedQuery = setInterval(() => getData(gameId), 5000);
 
 }
 
-function getData(gameId){
+function stopTimedQuery(){
+	clearInterval(timedQuery);
+}
+
+function getData(){
 
 	let myData = {gameId: gameId};
+	//console.log("Here");
 
 	$.get({url:"./data.php",data: myData,
 				 success: function(result){
-					console.log(result);
+					result = JSON.parse(result);
+					result = sanatizeGet(result);
+					handleGet(result);
 				}
 			})
 }
 
-function postData(gameId){
+function handleGet(input){
+
+	//console.log(input)
+
+	if(input.won == 0){
+
+		//set my color to the correct one
+		if(myId == input.uidinit){
+			myColor = input.initcolor;
+		}else if(myId == input.uidaccept){
+			if(input.initcolor == "white"){
+				myColor = "black";
+			}else{
+				myColor = "white";
+			}
+		}else{
+			//NOT YOUR GAME,
+			// maybe: handle logic for viewers???
+			myColor = "spectator";
+		}
+
+		//console.log(input.turnnum);
+		//handle whos turn it is
+		if( ((Number(input.turnnum) + 1) % 2) === 0){
+			//console.log("init's turn");
+			turn = "white";
+			$('.turn-active').removeClass('turn-active');
+			$('.white-box').addClass('turn-active');
+		}else{
+			turn = "black";
+			$('.turn-active').removeClass('turn-active');
+			$('.black-box').addClass('turn-active');
+		}
+
+		if(myColor == "spectator"){
+			turn="spectator";
+		}
+
+		console.log(turn,myColor);
+		if(myColor == turn){
+			stopTimedQuery();
+		}
+
+		$('#turn-num').html(input.turnnum);
+
+	}else{
+
+		stopTimedQuery();
+		$('#turn-num').html(input.turnnum + " FINISHED");
+
+	}
+
+		if(myColor === "white"){
+
+			if(myId == input.uidinit){
+				$('#white-user').html(input.initusername + " (you)");
+				$('#black-user').html(input.acceptusername);
+			}else{
+				$('#white-user').html(input.acceptusername + " (you)");
+				$('#black-user').html(input.initusername);
+			}
+
+		}else{
+
+			if(myId == input.uidinit){
+				$('#black-user').html(input.initusername  + " (you)");
+				$('#white-user').html(input.acceptusername);
+			}else{
+				$('#black-user').html(input.acceptusername  + " (you)");
+				$('#white-user').html(input.initusername);
+			}
+
+
+		}
+
+
+	board.load(input);
+	//console.log(board.board);
+	paintBoard();
+
+
+}
+
+function setMyId(userId){
+	myId = userId;
+}
+
+function setGameId(gID){
+	gameId = gID;
+}
+
+function sanatizeGet(input){
+
+	let newObj = {};
+	console.log(input);
+
+	for(pieceId in input){
+
+		if(input[pieceId]){
+			if(pieceId.substring(1,2) === "p"){
+				//console.log(pieceId, input[pieceId]);
+				if(input[pieceId].substring(2,3) === "0"){
+
+					newObj[pieceId] = input[pieceId].substring(0,2);
+
+				}else{
+					//HANDLE CASE OF PROMOTED PAWN
+				}
+			}else{
+				newObj[pieceId] = input[pieceId];
+			}
+		}
+	}
+
+
+	return newObj;
+
+}
+
+function sanatizePost(input){
+
+	let newObj = {};
+
+	console.log("sanatize input" , input);
+	for(pieceId in input){
+
+		if(input[pieceId]){
+
+			if(pieceId.substring(1,2) === "p"){
+					if(true){ //HANDLE CASE THEY ARE PROMOTED...
+						console.log(pieceId, input[pieceId]);
+						newObj[pieceId] = input[pieceId] + "0";
+					}
+				}else{
+					newObj[pieceId] = input[pieceId];
+				}
+			}else{
+				newObj[pieceId] = null;
+			}
+
+	}
+
+	console.log("sanatized post: " , newObj);
+	return newObj;
+
+
+
+}
+
+function postData(){
 
 	//console.log('test');
+	let currBoardState = sanatizePost(board.dump());
 
-	let myData = {gameId: gameId, ...board.dump() };
+	let myData = {action:"update" ,gameId: gameId, board: currBoardState};
 
 	$.post({url:"./data.php",data: myData,
 				 success: function(result){
 					console.log(result);
-					console.log(typeof(result));
-					let jsonObj = JSON.parse(result);
-					console.log(jsonObj)
+					getData();
+					startTimedQuery();
 				}
 			})
 
 }
+
+function postGameEnd(){
+
+	let myData = {action:"end", gameId: gameId, myWinningId: myId};
+
+	$.post({url:"./data.php",data: myData,
+				 success: function(result){
+					console.log(result);
+					getData();
+				}
+			})
+
+}
+

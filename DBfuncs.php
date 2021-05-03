@@ -127,10 +127,13 @@ function getAcceptedGames($dbh, $currid){
 		//get the games & opposing user information from the
 		//the games that I've initiated
     $query = "SELECT * FROM pvpgames JOIN users " .
-						 "WHERE gameid IN " .
+						 "WHERE ( gameid IN " .
 						 "(SELECT gameid FROM pvpgames " .
-						 "WHERE uidaccept=:currid and accepted=1) " .
-						 "AND users.id = :currid" ;
+						 "WHERE uidaccept=:currid and accepted=1 AND won = 0) " .
+						 "AND pvpgames.uidinit = users.id) OR " .
+						 "( gameid IN (SELECT gameid FROM pvpgames " .
+						 "WHERE uidinit=:currid and accepted=1 AND won = 0) " .
+						 "AND pvpgames.uidaccept = users.id) ";
 
     $stmt = $dbh->prepare($query);
 
@@ -217,6 +220,27 @@ function getUserInfo($dbh, $target_uid){
 	}
 }
 
+function getGameInfo($dbh, $game_id){
+
+	try{
+		$query = "SELECT * FROM pvpgames " .
+					 	 "WHERE gameid=:game_id";
+		$stmt = $dbh->prepare($query);
+
+		$stmt->bindParam('game_id',$game_id);
+
+		$stmt->execute();
+		$db_obj = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$stmt = null;
+
+		return $db_obj;
+
+
+	}catch(PDOException $e){
+		die('PDO error in getFriends() ' . $e->getMessage());
+	}
+}
+
 /*
 Returns:
 	3 if both are friends
@@ -259,6 +283,49 @@ function isFriend($dbh, $target_uid, $curr_uid){
 	}catch(PDOException $e){
 		die('PDO error in getFriends() ' . $e->getMessage());
 	}
+}
+
+/*
+ *Returns 0 if no challenge exists
+ *returns 1 if I challenged Them
+ *returns 2 if They challenged Me
+*/
+function isChallenged($dbh, $viewing_uid, $user_id){
+
+	try{
+
+		$query = "SELECT * FROM pvpgames " .
+					 	 "WHERE (uidaccept = :viewing_uid AND uidinit= :user_id  AND accepted = 0) " .
+						 "OR (uidinit = :viewing_uid AND uidaccept = :user_id AND accepted=0) ";
+
+		$stmt = $dbh->prepare($query);
+
+
+		$stmt->bindParam('viewing_uid',$viewing_uid);
+		$stmt->bindParam('user_id',$user_id);
+
+		$stmt->execute();
+		$db_obj = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+
+
+		$stmt = null;
+
+		if(count($db_obj) > 0){
+			if($db_obj[0]->uidinit == $user_id){
+				return 1;
+			}else{
+				return 2;
+			}
+		}else{
+			return 0;
+		}
+
+
+	}catch(PDOException $e){
+		die('PDO error in getFriends() ' . $e->getMessage());
+	}
+
 }
 
 function removeFriend($dbh, $curr_uid, $target_uid){
@@ -350,12 +417,12 @@ function searchUsers($dbh, $search_string){
 
 }
 
-function getGame($dbh, $game_id){
+function getPvpGame($dbh, $game_id){
 
 	try{
 
-		$query = "SELECT * FROM users " .
-					 	 "WHERE gameid=:game_id";
+		$query = "SELECT * FROM pvpgames " .
+					 	 "WHERE gameid=:gameid";
 
 
 		$stmt = $dbh->prepare($query);
@@ -375,29 +442,281 @@ function getGame($dbh, $game_id){
 
 }
 
-//NOTWORKING
-function postGame($dbh, $game_id, $peices){
+function postPvpGame($dbh, $game_id, $board){
 
 	try{
+		echo "here";
+		$board_string = "";
+		var_dump($board);
 
-		$query = "SELECT * FROM users " .
-					 	 "WHERE gameid=:game_id";
+		while ( list( $key, $value) = each($board)){
+			if( strlen($value) != 0){
+				$board_string .= "$key = \"$value\", "; 
+			}else{
+				$board_string .= "$key = NULL, ";
+			}
+		}
 
+		$board_string = substr( $board_string, 0, strlen($board_string) - 2);
+		echo $board_string;
+		$query = "UPDATE pvpgames SET " . $board_string .
+					 	 " WHERE gameid=:game_id";
 
+		echo $query;
 		$stmt = $dbh->prepare($query);
 
-		$stmt->bindParam('gameid',$game_id);
-		//var_dump($stmt);
+		$stmt->bindParam('game_id',$game_id);
 		$stmt->execute();
 		$db_obj = $stmt->fetchAll(PDO::FETCH_OBJ);
 		$stmt = null;
-
 		return $db_obj;
 
 
 	}catch(PDOException $e){
 		die('PDO error in getFriends() ' . $e->getMessage());
 	}
+
+}
+
+function incrementTurn($dbh, $game_id){
+
+	try{
+	
+	$query = "UPDATE pvpgames SET turnnum = turnnum + 1 " .
+					 "WHERE gameid=:game_id";
+
+		echo $query;
+		$stmt = $dbh->prepare($query);
+
+		$stmt->bindParam('game_id',$game_id);
+		$stmt->execute();
+		$db_obj = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$stmt = null;
+		return $db_obj;
+
+
+	}catch(PDOException $e){
+		die('PDO error in getFriends() ' . $e->getMessage());
+	}
+
+}
+
+function acceptGame($dbh, $game_id){
+
+	try{
+
+	$query = "UPDATE pvpgames SET accepted = 1 " .
+					 "WHERE gameid=:game_id";
+
+		echo $query;
+		$stmt = $dbh->prepare($query);
+
+		$stmt->bindParam('game_id',$game_id);
+		$stmt->execute();
+		$db_obj = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$stmt = null;
+		return $db_obj;
+
+
+	}catch(PDOException $e){
+		die('PDO error in getFriends() ' . $e->getMessage());
+	}
+}
+
+function declineGame($dbh, $game_id){
+
+	try{
+
+	$query = "DELETE FROM pvpgames " .
+					 "WHERE gameid=:game_id";
+
+		echo $query;
+		$stmt = $dbh->prepare($query);
+
+		$stmt->bindParam('game_id',$game_id);
+		$stmt->execute();
+		$db_obj = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$stmt = null;
+		return $db_obj;
+
+
+	}catch(PDOException $e){
+		die('PDO error in getFriends() ' . $e->getMessage());
+	}
+}
+
+
+function winGame($dbh, $game_id){
+
+	try{
+
+	$query = "UPDATE pvpgames SET won = 1 " .
+					 "WHERE gameid=:game_id";
+
+		echo $query;
+		$stmt = $dbh->prepare($query);
+
+		$stmt->bindParam('game_id',$game_id);
+		$stmt->execute();
+		$db_obj = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$stmt = null;
+		return $db_obj;
+
+
+	}catch(PDOException $e){
+		die('PDO error in getFriends() ' . $e->getMessage());
+	}
+}
+
+function winUser($dbh, $user_id){
+
+	try{
+
+	$query = "UPDATE users SET wins = wins + 1 " .
+					 "WHERE id=:user_id";
+
+		echo $query;
+		$stmt = $dbh->prepare($query);
+
+		$stmt->bindParam('user_id',$user_id);
+		$stmt->execute();
+		$db_obj = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$stmt = null;
+		return $db_obj;
+
+
+	}catch(PDOException $e){
+		die('PDO error in getFriends() ' . $e->getMessage());
+	}
+}
+
+
+function loseUser($dbh, $user_id){
+
+	try{
+
+	$query = "UPDATE users SET losses = losses + 1 " .
+					 "WHERE id=:user_id";
+
+		echo $query;
+		$stmt = $dbh->prepare($query);
+
+		$stmt->bindParam('user_id',$user_id);
+		$stmt->execute();
+		$db_obj = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$stmt = null;
+		return $db_obj;
+
+
+	}catch(PDOException $e){
+		die('PDO error in getFriends() ' . $e->getMessage());
+	}
+}
+
+
+function initiateChallenge($dbh, $curr_id, $viewing_uid, $starting_color){
+
+	try{
+
+	$query = "INSERT INTO pvpgames (uidaccept, uidinit, initcolor) " .
+					 "VALUES ( :viewing_uid, :curr_id, :starting_color)";
+
+		$stmt = $dbh->prepare($query);
+
+		$stmt->bindParam('curr_id',$curr_id);
+		$stmt->bindParam('viewing_uid',$viewing_uid);
+		$stmt->bindParam('starting_color',$starting_color);
+		$stmt->execute();
+		$db_obj = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$stmt = null;
+
+
+	}catch(PDOException $e){
+		die('PDO error in getFriends() ' . $e->getMessage());
+	}
+
+}
+
+
+function acceptChallenge($dbh, $curr_id, $viewing_uid){
+
+	try{
+
+	$query = "UPDATE pvpgames SET accepted = 1 WHERE " .
+           "uidinit = :viewing_uid AND uidaccept = :curr_id AND accepted = 0";
+
+		echo $query;
+		$stmt = $dbh->prepare($query);
+
+		$stmt->bindParam('curr_id',$curr_id);
+		$stmt->bindParam('viewing_uid',$viewing_uid);
+
+		$stmt->execute();
+		$db_obj = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$stmt = null;
+
+
+	}catch(PDOException $e){
+		die('PDO error in getFriends() ' . $e->getMessage());
+	}
+
+}
+
+
+function declineChallenge($dbh, $curr_id, $viewing_uid){
+
+
+	try{
+
+	$query = "DELETE FROM pvpgames WHERE " .
+					 "(uidinit = :viewing_uid AND uidaccept = :curr_id AND accepted = 0) OR " .
+					 "(uidinit = :curr_id AND uidaccept = :viewing_uid AND accepted = 0)";
+
+
+		//echo $query;
+		$stmt = $dbh->prepare($query);
+
+		$stmt->bindParam('curr_id',$curr_id);
+		$stmt->bindParam('viewing_uid',$viewing_uid);
+
+		$stmt->execute();
+		$db_obj = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$stmt = null;
+
+
+	}catch(PDOException $e){
+		die('PDO error in getFriends() ' . $e->getMessage());
+	}
+
+}
+
+
+function getFinishedGames($dbh, $viewing_uid){
+
+	try{
+		$query = "SELECT * FROM pvpgames JOIN users " .
+						 "WHERE ( gameid IN " .
+						 "(SELECT gameid FROM pvpgames " .
+						 "WHERE uidaccept=:currid and accepted=1 AND won = 1) " .
+						 "AND pvpgames.uidinit = users.id) OR " .
+						 "( gameid IN (SELECT gameid FROM pvpgames " .
+						 "WHERE uidinit=:currid and accepted=1 AND won = 1) " .
+						 "AND pvpgames.uidaccept = users.id) ";
+
+
+		$stmt = $dbh->prepare($query);
+
+		$stmt->bindParam('currid',$viewing_uid);
+
+		$stmt->execute();
+		$db_obj = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$stmt = null;
+		return $db_obj;
+
+	}catch(PDOException $e){
+		die('PDO error in getFriends() ' . $e->getMessage());
+	}
+
 
 }
 
