@@ -24,6 +24,11 @@ let colorSide = {
 'black':'bottom'
 }
 
+let pawnStart = {
+	'white':'G',
+	'black':'B'
+}
+
 let colors = {
 	'b':'black',
 	'w':'white'
@@ -42,13 +47,13 @@ class Piece {
 constructor(id){
   this.type = pieceName[id.substring(1,2)];
   this.color = colors[id.substring(0,1)];
-  this.hasMoved = false;
 	this.id = id;
+	this.hasMoved = true;
 }
 getImgSrc(){
   return images[this.color][this.type]
 }
-sadfa
+
 pieceCanMove(board,position,possibleMoves){
   let enemeyPieces = [] //list pairs of the enemy peice its reference[0] & current position[1]
   let kingPos = null;
@@ -64,7 +69,7 @@ pieceCanMove(board,position,possibleMoves){
       }
   }
 
-  console.log("enemy pieces: ", enemeyPieces)
+ console.log("enemy pieces: ", enemeyPieces)
   console.log("my king: ", kingPos)
   let checkedPossibleMoves = [];
   let [currX, currY] = position;
@@ -122,12 +127,12 @@ getViableMoves(board, position, check){
 
       let direction = (colorSide[this.color] === "top"? "down" :"up")
       let increment = (direction === "down" ? -1 : 1)
-      let pawnMove2 = (direction === "down" ? "G" : "B")
+      let pawnMove2 = (direction === "down" ? 6 : 1)
 
       if(!board.board[x][y+increment]){
           possTiles.push(indiciesToBoard(x,y+increment));
 
-          if(!board.board[x][y+(increment * 2)] && !this.hasMoved){
+          if(!board.board[x][y+(increment * 2)] && y === pawnMove2){
               possTiles.push(indiciesToBoard(x,y+(increment * 2)));
           }
       }
@@ -437,6 +442,7 @@ getViableMoves(board, position, check){
           }
       }
 
+
       //LEFT CASTLE
       if(!this.hasMoved && board.board[0][y] && board.board[0][y].type === "rook" && !board.board[0][y].hasMoved &&
           !board.board[x-1][y] && !board.board[x-2][y] ){
@@ -529,15 +535,51 @@ load(jsonDict){
 	//console.log(newBoard);
 
 	let pieces=Object.keys(jsonDict);
+	let promotedPieces = {};
+
+	jsonDict.promotions.forEach( (element, index) => {
+		promotedPieces[element.pieceid] = index;
+	});
+
+	console.log(promotedPieces);
 
 	pieces.forEach( element => {
 		//console.log("element: ", element , typeof(element) , " is in allP: ", (allPieces.includes(element)));
 		if( allPieces.includes(element) && jsonDict[element]){
 			let [x,y] = boardToIndicies(jsonDict[element]);
 			newBoard[x][y] = new Piece(element);
+			if(element in promotedPieces){
+				newBoard[x][y].type = pieceName[ jsonDict.promotions[promotedPieces[element]].promotedtype ];
+			}
 		}
 
 	})
+
+/*
+	console.log(newBoard);
+	console.log(jsonDict.bkhasmoved, typeof(jsonDict.bkhasmoved));
+	jsonDict.bkhasmoved = Number(jsonDict.bkhasmoved);
+	console.log(jsonDict.bkhasmoved, typeof(jsonDict.bkhasmoved));
+	jsonDict.bkhasmoved = Boolean(jsonDict.bkhasmoved);
+	console.log(jsonDict.bkhasmoved, typeof(jsonDict.bkhasmoved));
+*/
+
+
+	if(newBoard[3][0] && newBoard[3][0].type === "king")
+		newBoard[3][0].hasMoved = Boolean(Number(jsonDict.bkhasmoved));
+	if(newBoard[3][7] && newBoard[3][7].type === "king")
+		newBoard[3][7].hasMoved = Boolean(Number(jsonDict.wkhasmoved));
+	if(newBoard[0][0] && newBoard[0][0].type === "rook")
+		newBoard[0][0].hasMoved = Boolean(Number(jsonDict.br0hasmoved));
+	if(newBoard[7][0] && newBoard[7][0].type === "rook")
+		newBoard[7][0].hasMoved = Boolean(Number(jsonDict.br1hasmoved));
+	if(newBoard[0][7] && newBoard[0][7].type === "rook")
+		newBoard[0][7].hasMoved = Boolean(Number(jsonDict.wr0hasmoved));
+	if(newBoard[7][7] && newBoard[7][7].type === "rook")
+		newBoard[7][7].hasMoved = Boolean(Number(jsonDict.wr1hasmoved));
+
+
+	//console.log(newBoard);
 
 	this.board = newBoard;
 
@@ -564,6 +606,26 @@ dump(){
 				let currPiece = this.board[x][y];
 				let tile= indiciesToBoard(x,y);
 				dict[currPiece.id] = tile;
+				switch(currPiece.id){
+					case 'wk0':
+						dict.wkhasmoved = Number(this.board[x][y].hasMoved);
+						break;
+					case 'bk0':
+						dict.bkhasmoved = Number(this.board[x][y].hasMoved);
+						break;
+					case 'wr0':
+						dict.wr0hasmoved = Number(this.board[x][y].hasMoved);
+						break;
+					case 'wr1':
+						dict.wr1hasmoved = Number(this.board[x][y].hasMoved);
+						break;
+					case 'br0':
+						dict.br0hasmoved = Number(this.board[x][y].hasMoved);
+						break;
+					case 'br1':
+						dict.br1hasmoved = Number(this.board[x][y].hasMoved);
+						break;
+				}
 			}
 
 		}
@@ -577,6 +639,7 @@ dump(){
 		}
 	})
 
+
 	return dict;
 
 }
@@ -586,6 +649,8 @@ dump(){
 
 let board = new Board();
 let turn, myColor; //CHANGED
+let tileMoveFrom, tileMoveTo, lastMoveString; //FOR LAST MOVE TRACKING
+
 
 function paintBoard(){
 console.log("repainting-board");
@@ -624,6 +689,15 @@ for(let y = 7; y >= 0; y--){
       $(".board-wrapper").append(tile);
   }
 }
+
+
+	if(lastMoveString && lastMoveString.length > 0){
+
+		$('#' + lastMoveString.substring(0,2)).addClass("last-move");
+		$('#' + lastMoveString.substring(4,6)).addClass("last-move");
+
+	}
+
 }
 
 function indiciesToBoard(i, j){
@@ -667,6 +741,8 @@ paintBoard();
 }
 
 let targetPieceCords;
+let promotions = [];
+let x;
 
 function selectTile(selectedTile){
 
@@ -683,19 +759,72 @@ if(targetPiece && targetPiece.color === turn && turn === myColor){
   targetPieceCords = cords;
   let selectedTiles = targetPiece.getViableMoves(board, cords, true);
   for(let i = 0; i < selectedTiles.length; i++){
-      $('#' + selectedTiles[i]).addClass('active');
-      $('#' + selectedTiles[i]).removeAttr('onclick')
-      $('#' + selectedTiles[i]).attr('onclick','moveHere(this)')
+			console.log(selectedTiles[i]);
+			if(targetPiece.type === "pawn" && (targetPiece.color === "white" ? selectedTiles[i].substring(0,1) === "A" : selectedTiles[i].substring(0,1) === "H")){ 
+				$('#' + selectedTiles[i]).addClass('active');
+	      $('#' + selectedTiles[i]).removeAttr('onclick')
+	      $('#' + selectedTiles[i]).attr('onclick','moveHereAndPromote(this)');
+			}else{
+			$('#' + selectedTiles[i]).addClass('active');
+	      $('#' + selectedTiles[i]).removeAttr('onclick')
+	      $('#' + selectedTiles[i]).attr('onclick','moveHere(this)')
+			}
   	}
 	}
 }
 
+function moveHereAndPromote(targetTile){
+
+	//pieceName, images
+	console.log(targetTile);
+	x = targetTile;
+	let promptBox = document.createElement("div");
+	promptBox.classList.add("promotion-query");
+	let pieces = ["q", "r", "b", "n"];
+
+	pieces.forEach( item => {
+
+		console.log(targetTile, item);
+		let option = document.createElement("div");
+		option.setAttribute("onclick", `promoteToThis("${item}", x)`)
+		option.classList.add("promote-option");
+		let img = document.createElement("img");
+		img.setAttribute("src", images[myColor][pieceName[item]]);
+		let ptag = document.createElement("p");
+		ptag.innerHTML = pieceName[item];
+
+		option.append(img);
+		option.append(ptag);
+		promptBox.append(option);
+
+	});
+
+	$('.dialogue-box').append(promptBox);
+
+}
+
+function promoteToThis(pType, targetTile){
+	console.log(pType, targetTile);
+	let targetPiece = board.board[targetPieceCords[0]][targetPieceCords[1]];
+	targetPiece.type = pieceName[pType];
+	promotions = [{
+		pieceid: targetPiece.id,
+		promotion: pType
+	}];
+	moveHere(targetTile);
+	$(".promotion-query").remove();
+}
 
 let gameId;
 
 function moveHere(targetTile){
+
 let targetPiece = board.board[targetPieceCords[0]][targetPieceCords[1]];
 let targetCords = boardToIndicies(targetTile.id)
+
+tileMoveFrom = indiciesToBoard(targetPieceCords[0], targetPieceCords[1]);
+tileMoveTo = targetTile;
+
 
 //handling the special cases of promotion, or castling
 if(targetPiece.type === "king" && !targetPiece.hasMoved && (targetCords[0] === 1 || targetCords[0] === 6)){
@@ -727,10 +856,10 @@ if(targetPiece.type === "king" && !targetPiece.hasMoved && (targetCords[0] === 1
   board.board[targetCords[0]][targetCords[1]].hasMoved = true;
   board.board[targetPieceCords[0]][targetPieceCords[1]] = null;
 }
+postData();
 paintBoard();
 
 changeTurn();
-postData();
 
 
 }
@@ -764,6 +893,8 @@ function getData(){
 				}
 			})
 }
+
+let turnNum = 0;
 
 function handleGet(input){
 
@@ -840,10 +971,15 @@ function handleGet(input){
 
 		}
 
-
-	board.load(input);
-	//console.log(board.board);
-	paintBoard();
+	console.log(input.turnnum, turnNum);
+	//only repaint if the board has changed
+	if( !(input.turnnum == turnNum)){
+		lastMoveString = input.lastmove;
+		board.load(input);
+		paintBoard();
+		console.log(board.board);
+		turnNum = Number(input.turnnum);
+	}
 
 
 }
@@ -859,7 +995,7 @@ function setGameId(gID){
 function sanatizeGet(input){
 
 	let newObj = {};
-	console.log(input);
+	//console.log(input);
 
 	for(pieceId in input){
 
@@ -916,16 +1052,21 @@ function sanatizePost(input){
 
 function postData(){
 
-	//console.log('test');
 	let currBoardState = sanatizePost(board.dump());
+	console.log(tileMoveFrom, tileMoveTo);
+	lastMoveString = `${tileMoveFrom}->${tileMoveTo.id}`;
+	currBoardState.lastmove = lastMoveString;
 
-	let myData = {action:"update" ,gameId: gameId, board: currBoardState};
+	let myData = {action:"update" ,gameId: gameId, board: currBoardState, promotions: promotions};
+
+	console.log("POST: ", myData);
 
 	$.post({url:"./data.php",data: myData,
 				 success: function(result){
 					console.log(result);
 					getData();
 					startTimedQuery();
+					promotions = [];
 				}
 			})
 
@@ -935,7 +1076,7 @@ function postGameEnd(){
 
 	let myData = {action:"end", gameId: gameId, myWinningId: myId};
 
-	$.post({url:"./data.php",data: myData,
+	$.post({url:"./data.php", data: myData,
 				 success: function(result){
 					console.log(result);
 					getData();

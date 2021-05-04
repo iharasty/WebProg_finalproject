@@ -121,7 +121,7 @@ function declineGame(gameId){
 					</div>
 
 					<div class='section ai-games'>
-						<h1>AI Games!</h1>
+						<!-- <h1>AI Games!</h1> -->
 					</div>
 
 				</div>

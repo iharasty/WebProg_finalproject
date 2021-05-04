@@ -370,6 +370,27 @@ function addFriend($dbh, $curr_uid, $target_uid){
 	}
 }
 
+function declineFriend($dbh, $curr_uid, $target_uid){
+
+	try{
+
+		$query = "DELETE FROM friends WHERE accepted = 0 AND  uidinit=:target_uid AND uidaccept=:curr_uid";
+
+		$stmt = $dbh->prepare($query);
+
+		$stmt->bindParam('target_uid',$target_uid);
+		$stmt->bindParam('curr_uid',$curr_uid);
+
+		$stmt->execute();
+		$db_obj = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$stmt = null;
+
+	}catch(PDOException $e){
+		die('PDO error in getFriends() ' . $e->getMessage());
+	}
+}
+
+
 function acceptFriend($dbh, $curr_uid, $target_uid){
 
 	try{
@@ -543,6 +564,29 @@ function declineGame($dbh, $game_id){
 	}catch(PDOException $e){
 		die('PDO error in getFriends() ' . $e->getMessage());
 	}
+}
+
+function incrementGamesStarted($dbh, $user){
+
+	try{
+
+	$query = "UPDATE users SET gamesstarted = gamesstarted + 1 " .
+					 "WHERE id=:user";
+
+		echo $query;
+		$stmt = $dbh->prepare($query);
+
+		$stmt->bindParam('user',$user);
+		$stmt->execute();
+		$db_obj = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$stmt = null;
+		return $db_obj;
+
+
+	}catch(PDOException $e){
+		die('PDO error in getFriends() ' . $e->getMessage());
+	}
+
 }
 
 
@@ -719,5 +763,55 @@ function getFinishedGames($dbh, $viewing_uid){
 
 
 }
+
+function getPromotions($dbh, $game_id){
+
+
+	try{
+		$query = "SELECT pieceid, promotedtype FROM promotions " . 
+						 "WHERE gameid = :game_id";
+
+
+		$stmt = $dbh->prepare($query);
+
+		$stmt->bindParam('game_id',$game_id);
+
+		$stmt->execute();
+		$db_obj = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$stmt = null;
+		return $db_obj;
+
+	}catch(PDOException $e){
+		die('PDO error in getFriends() ' . $e->getMessage());
+	}
+
+}
+
+
+function promote($dbh, $game_id, $piece_id, $promoted_type){
+
+
+	try{
+		$query = "INSERT INTO promotions (gameid, pieceid, promotedtype) " .
+						 "VALUES (:game_id, :piece_id, :promoted_type)";
+
+
+		$stmt = $dbh->prepare($query);
+
+		$stmt->bindParam('game_id',$game_id);
+		$stmt->bindParam('piece_id',$piece_id);
+		$stmt->bindParam('promoted_type', $promoted_type);
+
+		$stmt->execute();
+		$db_obj = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$stmt = null;
+		return $db_obj;
+
+	}catch(PDOException $e){
+		die('PDO error in getFriends() ' . $e->getMessage());
+	}
+
+}
+
 
 ?>

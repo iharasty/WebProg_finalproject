@@ -15,6 +15,7 @@ if(count($_GET) > 0){
 	$accept_data = getUserInfo($dbh, $game_data->uidaccept)[0] -> username;
 	$game_data -> acceptusername = $accept_data;
 	$game_data -> initusername = $init_data;
+	$game_data -> promotions = getPromotions($dbh, $game_id);
 	echo json_encode($game_data);
 
 }
@@ -28,6 +29,12 @@ if( isset($_POST["action"]) && !empty($_POST["action"])){
 		//print_r(json_decode($_POST["board"], true));
 		postPvpGame($dbh, $_POST["gameId"] , $_POST["board"]);
 		incrementTurn($dbh, $_POST["gameId"]);
+		if( count($_POST["promotions"]) > 0){
+
+			$promotion_data = $_POST["promotions"][0];
+			promote($dbh, $_POST["gameId"], $promotion_data["pieceid"], $promotion_data["promotion"]);
+
+		}
 
 	}
 
@@ -36,6 +43,9 @@ if( isset($_POST["action"]) && !empty($_POST["action"])){
 	if($_POST["action"] == "accept"){
 
 		acceptGame($dbh, $_POST["gameId"]);
+		$game_data = getGameInfo($dbh, $_POST["gameId"])[0];
+		incrementGamesStarted($dbh, $game_data->uidaccept);
+		incrementGamesStarted($dbh, $game_data->uidinit);
 
 	}
 

@@ -30,6 +30,7 @@
 }
 */
 
+
 .board-wrapper{
     justify-content: center;
     position: relative;
@@ -90,4 +91,19 @@ img{
 
 .active{
     background: green;
+		cursor: pointer;
+}
+
+
+.last-move{
+	box-shadow: inset 0 0 20px #0f0;
+}
+
+.promotion-query{
+	display: flex;
+	flex-direction: row;
+}
+
+.promotion-option{
+	cursor: pointer;
 }

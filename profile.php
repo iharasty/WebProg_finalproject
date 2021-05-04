@@ -19,6 +19,8 @@
 	if($_POST["challenge"] == "accept"){
 		//echo "accepted!";
 		acceptChallenge($dbh, $user_id, $viewing_uid);
+		incrementGamesStarted($dbh, $user_id);
+		incrementGamesStarted($dbh, $viewing_uid);
 	}
 	if($_POST["challenge"] == "decline"){
 		//echo "declined!";
@@ -40,6 +42,10 @@
   if($_POST["action"] == "accept"){
     //echo "accepted!";
 		acceptFriend($dbh, $user_id, $viewing_uid);
+	}
+  if($_POST["action"] == "decline"){
+    //echo "accepted!";
+		declineFriend($dbh, $user_id, $viewing_uid);
 	}
 	//add 'Dont Accept!!!!'
 
@@ -109,6 +115,8 @@
 					}elseif($is_friend==1){
 						echo "<form action='./profile.php?userid=$viewing_uid' method='POST'> <input class='invis' name='action' value='accept'/>".
 									"<button type='submit'> Accept request? </button> </form>";
+						echo "<form action='./profile.php?userid=$viewing_uid' method='POST'> <input class='invis' name='action' value='decline'/>".
+									"<button type='submit'> Decline request? </button> </form>";
 					}elseif($is_friend == 2){
 						echo "waiting for them <br/> to respond...";
 					}elseif($is_friend == 3){
